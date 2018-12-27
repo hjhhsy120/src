@@ -1,0 +1,18 @@
+Reading...
+Pre-procesing for non-uniform negative sampling!
+Walk iteration:
+1 / 10
+2 / 10
+3 / 10
+4 / 10
+5 / 10
+6 / 10
+7 / 10
+8 / 10
+9 / 10
+10 / 10
+Learning representation...
+43.526439905166626
+Saving embeddings...
+Training classifier using 50.00% nodes...
+{'micro': 0.71570576540755471, 'macro': 0.48978124990665284, 'samples': 0.71570576540755471, 'weighted': 0.69926741672935822}

@@ -1,0 +1,15 @@
+Average degree: 32.60696517412935
+
+degree distribution:
+10% : 2
+20% : 4
+30% : 9
+40% : 15
+50% : 22
+60% : 29
+70% : 39
+80% : 52
+90% : 78
+
+Average number of common neighbor between each label's node pairs: 7.164330615018688
+Number of pairs: 23544

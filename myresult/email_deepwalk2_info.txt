@@ -1,0 +1,23 @@
+Reading...
+Walk iteration:
+1 / 10
+2 / 10
+3 / 10
+4 / 10
+5 / 10
+6 / 10
+7 / 10
+8 / 10
+9 / 10
+10 / 10
+Learning representation...
+Pre-procesing for non-uniform negative sampling!
+For positive: data size = 14562636
+Small prob: 0
+epoch:0 sum of loss:1931.01441139
+epoch:1 sum of loss:1907.05244285
+epoch:2 sum of loss:1902.79236418
+epoch:3 sum of loss:1900.19191623
+epoch:4 sum of loss:1898.12209976
+1047.5028471946716
+Saving embeddings...

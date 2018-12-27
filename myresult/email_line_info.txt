@@ -1,0 +1,27 @@
+Reading...
+Pre-procesing for non-uniform negative sampling!
+Pre-procesing for non-uniform negative sampling!
+epoch:0 sum of loss:137.182230413
+epoch:0 sum of loss:137.168264747
+Training classifier using 50.00% nodes...
+{'micro': 0.16500994035785288, 'macro': 0.022361946314195091, 'samples': 0.16500994035785288, 'weighted': 0.071888312381607547}
+epoch:1 sum of loss:136.990949869
+epoch:1 sum of loss:128.432162166
+Training classifier using 50.00% nodes...
+{'micro': 0.30019880715705766, 'macro': 0.099511120821597854, 'samples': 0.30019880715705766, 'weighted': 0.22141118296901993}
+epoch:2 sum of loss:136.507694423
+epoch:2 sum of loss:96.6860459298
+Training classifier using 50.00% nodes...
+{'micro': 0.46520874751491054, 'macro': 0.189357869570285, 'samples': 0.46520874751491054, 'weighted': 0.39533720845360726}
+epoch:3 sum of loss:135.611614048
+epoch:3 sum of loss:89.0558950156
+Training classifier using 50.00% nodes...
+{'micro': 0.562624254473161, 'macro': 0.26039608432570016, 'samples': 0.562624254473161, 'weighted': 0.50051515903317512}
+epoch:4 sum of loss:134.492696702
+epoch:4 sum of loss:86.8722086847
+Training classifier using 50.00% nodes...
+{'micro': 0.62823061630218691, 'macro': 0.32790087453456973, 'samples': 0.62823061630218691, 'weighted': 0.58008135080069056}
+165.76751255989075
+Saving embeddings...
+Training classifier using 50.00% nodes...
+{'micro': 0.62823061630218691, 'macro': 0.32790087453456973, 'samples': 0.62823061630218691, 'weighted': 0.58008135080069056}

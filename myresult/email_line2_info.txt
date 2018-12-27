@@ -1,0 +1,11 @@
+Reading...
+Pre-procesing for non-uniform negative sampling!
+epoch:0 sum of loss:137.116021931
+epoch:1 sum of loss:123.443130106
+epoch:2 sum of loss:91.9413159937
+epoch:3 sum of loss:86.4484128803
+epoch:4 sum of loss:82.2683476061
+60.128167152404785
+Saving embeddings...
+Training classifier using 50.00% nodes...
+{'micro': 0.61431411530815105, 'macro': 0.30613722271935595, 'samples': 0.61431411530815105, 'weighted': 0.56070668317092809}
