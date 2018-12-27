@@ -26,13 +26,15 @@ node2vec包含了deepwalk和node2vec算法，先调用walker（未改动）采�
 
 问题3：使用trainer，在email数据集上表现和原来差不多（不论parser是哪种方式），但是在cora和blogcatalog上表现很差。
 
-尝试1：修改optimizer。原先是adam，考虑改成SGD，结果在email上都不收敛了（loss基本不变）
+尝试1：修改optimizer。原先是adam，考虑改成SGD，结果在email上都不收敛了（loss基本不变，分类效果非常差）
 
 尝试2：调整学习率。没找到更好的学习率。
 
 尝试3：取消batch的随机化，调整negative_ratio。似乎影响不大
 
 尝试4：修改batch_size。没有提升cora上的效果。
+
+尝试5：修改epoch数。即使在loss基本稳定的情况下，也基本没有提升cora上的效果。
 
 修改前的超参数可参考line0.py（或者openne里的line.py）
 
