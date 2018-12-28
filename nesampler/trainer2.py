@@ -32,28 +32,29 @@ class _trainer(object):
     def build_graph(self):
         self.h = tf.placeholder(tf.int32, [None])
         self.t = tf.placeholder(tf.int32, [None])
-        self.sign = tf.placeholder(tf.float32, [None])
 
         cur_seed = random.getrandbits(32)
         self.embeddings = tf.get_variable(name="embeddings", shape=[
                                           self.node_size, self.rep_size], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
-        self.context_embeddings = tf.get_variable(name="context_embeddings", shape=[
-                                                  self.node_size, self.rep_size], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
-        # self.h_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.h), 1)
-        # self.t_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.t), 1)
-        # self.t_e_context = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.context_embeddings, self.t), 1)
+        self.nce_weights = tf.Variable(
+                            tf.truncated_normal([self.node_size, self.rep_size],
+                            stddev=1.0 / math.sqrt(self.rep_size)))
+        self.nce_biases = tf.Variable(tf.zeros([self.node_size]))
+
         self.h_e = tf.nn.embedding_lookup(self.embeddings, self.h)
-        # self.t_e = tf.nn.embedding_lookup(self.embeddings, self.t)
-        self.t_e_context = tf.nn.embedding_lookup(
-            self.context_embeddings, self.t)
-        self.second_loss = -tf.reduce_mean(tf.log(tf.clip_by_value(tf.sigmoid(
-            self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1)),1e-8,1.0)))
-        # self.second_loss = -tf.reduce_mean(tf.log_sigmoid(
-        #     self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1)))
-        self.loss = self.second_loss
+
+        self.loss = tf.reduce_mean(
+                    tf.nn.nce_loss(weights=self.nce_weights,
+                             biases=self.nce_biases,
+                             labels=tf.reshape(self.t, [-1, 1]),
+                             inputs=self.h_e,
+                             num_sampled=self.negative_ratio,
+                             num_classes=self.node_size))
+
+
         optimizer = tf.train.AdamOptimizer(0.001)
         self.train_op = optimizer.minimize(self.loss)
-        # self.train_op = tf.train.GradientDescentOptimizer(0.001).minimize(self.loss)
+        # self.train_op = tf.train.GradientDescentOptimizer(1.0).minimize(self.loss)
 
     def train_one_epoch(self):
         sum_loss = 0.0
@@ -63,8 +64,7 @@ class _trainer(object):
             h, t, sign = batch
             feed_dict = {
                 self.h: h,
-                self.t: t,
-                self.sign: sign,
+                self.t: t
             }
             _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict)
             sum_loss += cur_loss
@@ -90,7 +90,7 @@ class _trainer(object):
 
         # positive or negative mod
         mod = 0
-        mod_size = 1 + self.negative_ratio
+        mod_size = 1
         h = []
         t = []
         sign = 0

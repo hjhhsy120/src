@@ -46,6 +46,7 @@ def parse_args():
         'node2vec',
         'deepWalk',
         'MHWalk',
+        'lpWalk',
         'line',
         'gcn',
         'grarep',
@@ -135,6 +136,10 @@ def main(args):
         model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
                                   num_paths=args.number_walks, dim=args.representation_size,
                                   workers=args.workers, window=args.window_size, dw=2)
+    elif args.method == 'lpWalk':
+        model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
+                                  num_paths=args.number_walks, dim=args.representation_size,
+                                  workers=args.workers, window=args.window_size, dw=3)
     elif args.method == 'tadw':
         # assert args.label_file != ''
         assert args.feature_file != ''

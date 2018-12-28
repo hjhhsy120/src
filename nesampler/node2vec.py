@@ -55,7 +55,7 @@ class Node2vec(object):
         print("Learning representation...")
         self.model = trainer(graph=graph, samples=samples, rep_size=dim,
                             epoch=epoch, label_file=label_file, clf_ratio=clf_ratio,
-                            batch_size=1000*window, negative_ratio=1, ran=False)
+                            batch_size=1000, negative_ratio=5, ran=True)
         self.vectors = self.model.vectors
 
     def save_embeddings(self, filename):

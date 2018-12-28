@@ -1,0 +1,18 @@
+Reading...
+Preprocess transition probs...
+Walk iteration:
+1 / 10
+2 / 10
+3 / 10
+4 / 10
+5 / 10
+6 / 10
+7 / 10
+8 / 10
+9 / 10
+10 / 10
+Learning representation...
+71.44242525100708
+Saving embeddings...
+Training classifier using 50.00% nodes...
+{'micro': 0.74950298210735589, 'macro': 0.5140672316334135, 'samples': 0.74950298210735589, 'weighted': 0.73134810031387887}

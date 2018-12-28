@@ -1,0 +1,23 @@
+Reading...
+Preprocess transition probs...
+Walk iteration:
+1 / 10
+2 / 10
+3 / 10
+4 / 10
+5 / 10
+6 / 10
+7 / 10
+8 / 10
+9 / 10
+10 / 10
+Learning representation...
+Pre-procesing for non-uniform negative sampling!
+For positive: data size = 727426
+Small prob: 298509
+epoch:0 sum of loss:3036.82215816
+Training classifier using 50.00% nodes...
+{'micro': 0.1013916500994036, 'macro': 0.007780013413816231, 'samples': 0.10139165009940358, 'weighted': 0.037291742502730103}
+epoch:1 sum of loss:3036.4231894
+Training classifier using 50.00% nodes...
+{'micro': 0.1013916500994036, 'macro': 0.007780013413816231, 'samples': 0.10139165009940358, 'weighted': 0.037291742502730103}

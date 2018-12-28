@@ -2,10 +2,75 @@ from __future__ import print_function
 import random
 import numpy as np
 import multiprocessing
-
+import math
 
 def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
     class_instance.deepwalk_walk(walk_length, start_node)
+
+class lpWalker:
+    def __init__(self, G, workers):
+        self.G = G.G
+        self.node_size = G.node_size
+        self.look_up_dict = G.look_up_dict
+
+    #def __init__(self, nx_G, is_directed):
+    #    self.G = nx_G
+    #    self.is_directed = is_directed
+
+
+    def lp2vec_walk(self, walk_length, start_node):
+        """
+        Simulate a random walk starting from start node.
+        :param walk_length:
+        :param start_node:
+        :return:
+        """
+        G = self.G
+        alias_nodes = self.alias_nodes
+        walk = [start_node]
+
+        while len(walk) < walk_length:
+            cur = walk[-1]
+            cur_nbrs = sorted(G.neighbors(cur))
+            if len(cur_nbrs) > 0:
+                walk.append(cur_nbrs[alias_draw(alias_nodes[cur][0], alias_nodes[cur][1])])
+            else:
+                break
+        return walk
+
+    def simulate_walks(self, num_walks, walk_length):
+        """
+        Repeatedly simulate random walks from each node.
+        """
+        G = self.G
+        walks = []
+        nodes = list(G.nodes())
+        print('Walk iteration:')
+        for walk_iter in range(num_walks):
+            print(str(walk_iter+1), '/', str(num_walks))
+            random.shuffle(nodes)
+            for node in nodes:
+                walks.append(self.lp2vec_walk(walk_length=walk_length, start_node=node))
+        return walks
+
+    def preprocess_transition_probs(self):
+        """
+        Preprocessing of transition probabilities for guiding the random walks.
+        """
+        G = self.G
+
+        alias_nodes = {}
+        for node in G.nodes():
+            ndeg = G.degree(node)
+            unnormalized_probs = [G[node][nbr]['weight']/math.sqrt(ndeg * G.degree(nbr)) for nbr in sorted(G.neighbors(node))]
+            norm_const = sum(unnormalized_probs)
+            normalized_probs =  [float(u_prob)/norm_const for u_prob in unnormalized_probs]
+            alias_nodes[node] = alias_setup(normalized_probs)
+
+        self.alias_nodes = alias_nodes
+
+        return
+
 
 class MHWalker:
     def __init__(self, G, workers):

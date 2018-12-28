@@ -19,6 +19,10 @@ class Node2vec(object):
             self.walker = walker.BasicWalker(graph, workers=kwargs["workers"])
         elif dw == 2:
             self.walker = walker.MHWalker(graph, workers=kwargs["workers"])
+        elif dw == 3:
+            self.walker = walker.lpWalker(graph, workers=kwargs["workers"])
+            print("Preprocess transition probs...")
+            self.walker.preprocess_transition_probs()
         else:
             self.walker = walker.Walker(
                 graph, p=p, q=q, workers=kwargs["workers"])
