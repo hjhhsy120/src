@@ -5,9 +5,17 @@ ne&amp;sample
 
 修改__main__.py使得LINE不会在每个epoch之后都做test，只在最后做一次
 
-#### 新增
-
 增加了lpWalk
+
+#### 新增 & 问题
+
+增加了APP
+
+其中，num_paths就是原代码的iter；默认num_paths=200, sample=200，按原代码实际的采样个数是node_num x num_paths x sample，batch_size = 1, epoch = 1, 时间复杂度非常大。
+
+一方面，仅仅是采样的复杂度就已经远大于其他算法了，比如deepwalk是node_num x num_paths x walk_length，而它的num_paths和walk_length都比较小(10, 80)，所以我想在APP里面也把参数调小一点。
+
+另一方面，原代码每一步都做更新，但是在点数很多的时候，会导致非常大的更新次数。所以，除非不用tensorflow做训练，否则大概很难有效地复现APP算法。不知调大batch_size对结果会有怎样的影响。
 
 ### nesampler
 修改了__main__.py, line.py, node2vec.py，增加了trainer.py
@@ -41,8 +49,6 @@ node2vec包含了deepwalk和node2vec算法，先调用walker（未改动）采�
 尝试5：修改epoch数。即使在loss基本稳定的情况下，也基本没有提升cora上的效果。
 
 修改前的超参数可参考line0.py（或者openne里的line.py）
-
-#### 新增
 
 尝试6：怀疑log_sigmoid出现NAN，做clip_by_value使得log的参数在1e-8~1.0的范围（原本是0.0~1.0）。结果没有明显变化。
 
