@@ -11,11 +11,15 @@ ne&amp;sample
 
 增加了APP
 
-其中，num_paths就是原代码的iter；默认num_paths=200, sample=200，按原代码实际的采样个数是node_num x num_paths x sample，batch_size = 1, epoch = 1, 时间复杂度非常大。
+其中，默认iters=200, sample=200，按原代码实际的采样个数是node_num x iters x sample，batch_size = 1, epoch = 1, 时间复杂度非常大。
 
 一方面，仅仅是采样的复杂度就已经远大于其他算法了，比如deepwalk是node_num x num_paths x walk_length，而它的num_paths和walk_length都比较小(10, 80)，所以我想在APP里面也把参数调小一点。
 
-另一方面，原代码每一步都做更新，但是在点数很多的时候，会导致非常大的更新次数。所以，除非不用tensorflow做训练，否则大概很难有效地复现APP算法。不知调大batch_size对结果会有怎样的影响。
+另一方面，原代码每一步都做更新，但是在点数很多的时候，会导致非常大的更新次数。所以，除非不用tensorflow做训练，否则大概很难有效地复现APP算法。不知调大batch_size对结果会有怎样的影响。我试过batch_size=1000, epoch=10和batch_size=100, epoch=1，结果差不多
+
+当前参数：iters=10, sample=50, batch_size=1000, epoch=10, learning_rate=0.001(adam) 其他参数按原代码：停止概率jump_factor=0.15, 最大步数step=10, negative_ratio=5
+
+在email上的表现：micro F1 = 0.6612326043737574, macro F1 = 0.37598095720575286 比deepwalk差不到0.1；时间和line差不多。可能需要调参
 
 ### nesampler
 修改了__main__.py, line.py, node2vec.py，增加了trainer.py
