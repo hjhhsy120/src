@@ -10,6 +10,7 @@ class APP(object):
     def __init__(self, graph, dim, jump_factor=0.15, num_paths=20, sample=20, step=10, negative_ratio=5):
         random.seed()
         G = graph.G
+        self.size = dim
         node_size = graph.node_size
         look_up = graph.look_up_dict
         node_degree = np.zeros(node_size)  # out degree
@@ -39,7 +40,7 @@ class APP(object):
                     if iid != -1:
                         samples.append({0: root, 1: iid, "weight": 1.0})
         print('Training...')
-        self.model = trainer(graph, samples, rep_size=dim, batch_size=100, epoch=1,
+        self.model = trainer(graph, samples, rep_size=dim, batch_size=1000, epoch=10,
                     negative_ratio=negative_ratio, ran=False, ngmode=1)
         self.vectors = self.model.vectors
 

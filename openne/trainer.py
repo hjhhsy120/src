@@ -67,8 +67,6 @@ class _trainer(object):
             _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict)
             sum_loss += cur_loss
             batch_id += 1
-            if batch_id % 1000 == 1:
-                print('batch {}'.format(batch_id))
         print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
         self.cur_epoch += 1
 
