@@ -7,7 +7,7 @@ from .trainer import trainer
 class APP(object):
 
     # jump_factor: prob to stop
-    def __init__(self, graph, dim, jump_factor=0.15, num_paths=20, sample=20, step=10, negative_ratio=5):
+    def __init__(self, graph, dim, jump_factor=0.15, iters=10, sample=50, step=10, negative_ratio=5):
         random.seed()
         G = graph.G
         self.size = dim
@@ -20,11 +20,10 @@ class APP(object):
         nodes = list(G.nodes())
         print('Walking...')
         samples = []
-        for kk in range(num_paths):
+        for kk in range(iters):
             random.shuffle(nodes)
             for root in nodes:
-                cur = root
-                cur_nbrs = list(G.neighbors(cur))
+                cur_nbrs = list(G.neighbors(root))
                 if len(cur_nbrs) == 0:
                     continue
                 for i in range(sample+1):
@@ -39,6 +38,7 @@ class APP(object):
                         cur_nbrs = list(G.neighbors(iid))
                     if iid != -1:
                         samples.append({0: root, 1: iid, "weight": 1.0})
+                    cur_nbrs = list(G.neighbors(root))
         print('Training...')
         self.model = trainer(graph, samples, rep_size=dim, batch_size=1000, epoch=10,
                     negative_ratio=negative_ratio, ran=False, ngmode=1)

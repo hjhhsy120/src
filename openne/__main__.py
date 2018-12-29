@@ -143,7 +143,7 @@ def main(args):
                                   num_paths=args.number_walks, dim=args.representation_size,
                                   workers=args.workers, window=args.window_size, dw=3)
     elif args.method == 'app':
-        model = app.APP(graph=g, dim=args.representation_size)
+        model = app.APP(graph=g, dim=args.representation_size, iters=args.number_walks)
     elif args.method == 'tadw':
         # assert args.label_file != ''
         assert args.feature_file != ''

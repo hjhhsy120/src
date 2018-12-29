@@ -1,17 +1,17 @@
 Reading...
 Walking...
 Training...
-epoch:0 sum of loss:991.479109541
-epoch:1 sum of loss:811.593197554
-epoch:2 sum of loss:807.239446983
-epoch:3 sum of loss:802.564758494
-epoch:4 sum of loss:796.244122729
-epoch:5 sum of loss:789.175446182
-epoch:6 sum of loss:781.726253659
-epoch:7 sum of loss:773.573262483
-epoch:8 sum of loss:765.717770353
-epoch:9 sum of loss:757.371159121
-148.05654191970825
+epoch:0 sum of loss:1222.8435798
+epoch:1 sum of loss:966.112590566
+epoch:2 sum of loss:922.629074767
+epoch:3 sum of loss:901.931397498
+epoch:4 sum of loss:888.856698424
+epoch:5 sum of loss:879.238779038
+epoch:6 sum of loss:869.475617737
+epoch:7 sum of loss:861.980266131
+epoch:8 sum of loss:854.038125731
+epoch:9 sum of loss:846.353108957
+176.66986918449402
 Saving embeddings...
 Training classifier using 50.00% nodes...
-{'micro': 0.10337972166998012, 'macro': 0.02569356854675757, 'samples': 0.10337972166998012, 'weighted': 0.077161840125844941}
+{'micro': 0.70576540755467199, 'macro': 0.41961009702596808, 'samples': 0.70576540755467199, 'weighted': 0.67329825525835352}
