@@ -5,6 +5,10 @@ ne&amp;sample
 
 修改__main__.py使得LINE不会在每个epoch之后都做test，只在最后做一次
 
+#### 新增
+
+增加了lpWalk
+
 ### nesampler
 修改了__main__.py, line.py, node2vec.py，增加了trainer.py
 
@@ -37,6 +41,12 @@ node2vec包含了deepwalk和node2vec算法，先调用walker（未改动）采�
 尝试5：修改epoch数。即使在loss基本稳定的情况下，也基本没有提升cora上的效果。
 
 修改前的超参数可参考line0.py（或者openne里的line.py）
+
+#### 新增
+
+尝试6：怀疑log_sigmoid出现NAN，做clip_by_value使得log的参数在1e-8~1.0的范围（原本是0.0~1.0）。结果没有明显变化。
+
+尝试7：修改loss为nce_loss……结果很差。
 
 ### Other files
 myresult是存放embedding结果和其他输出信息（info）的
