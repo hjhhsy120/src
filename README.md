@@ -11,7 +11,7 @@ ne&amp;sample
 
 增加了APP
 
-其中，默认iters=200, sample=200，按原代码实际的采样个数是node_num x iters x sample，batch_size = 1, epoch = 1, 时间复杂度非常大。
+其中，默认iters=200, sample=200，按原代码实际的采样个数是node_num x iters x sample，batch_size = 1, epoch = 1, 时间开销非常大。
 
 一方面，仅仅是采样的复杂度就已经远大于其他算法了，比如deepwalk是node_num x num_paths x walk_length，而它的num_paths和walk_length都比较小(10, 80)，所以我想在APP里面也把参数调小一点。
 
