@@ -19,7 +19,9 @@ ne&amp;sample
 
 当前参数：iters=10, sample=50, batch_size=1000, epoch=10, learning_rate=0.001(adam) 其他参数按原代码：停止概率jump_factor=0.15, 最大步数step=10, negative_ratio=5
 
-在email上的表现：micro F1 = 0.6612326043737574, macro F1 = 0.37598095720575286 比deepwalk差不到0.1；时间和line差不多。可能需要调参
+在email上的表现：micro F1 = 0.6612326043737574, macro F1 = 0.37598095720575286 比deepwalk差不到0.1；时间和line差不多。
+
+但是，在cora上的表现很差：micro F1 = 0.23914327917282127, macro F1 = 0.13953985454875353，比line差(0.2, 0.1)，比deepwalk差(0.6, 0.7)，目前不清楚原因
 
 ### nesampler
 修改了__main__.py, line.py, node2vec.py，增加了trainer.py
