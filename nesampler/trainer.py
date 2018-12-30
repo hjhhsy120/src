@@ -220,14 +220,31 @@ class _trainer(object):
 class trainer(object):
 
     def __init__(self, graph, samples, rep_size=128, batch_size=1000,
-                epoch=10, negative_ratio=5, ran=True, ngmode=0):
+                epoch=10, negative_ratio=5, label_file=None, clf_ratio=0.5,
+                auto_save=True, ran=True, ngmode=0):
         self.rep_size = rep_size
         self.vectors = {}
         self.model = _trainer(graph, samples, rep_size, batch_size,
                            negative_ratio, ran, ngmode)
         for i in range(epoch):
             self.model.train_one_epoch()
+            if label_file:
+                self.get_embeddings()
+                X, Y = read_node_label(label_file)
+                print("Training classifier using {:.2f}% nodes...".format(
+                    clf_ratio*100))
+                clf = Classifier(vectors=self.vectors,
+                                 clf=LogisticRegression())
+                result = clf.split_train_evaluate(X, Y, clf_ratio)
+
+                if result['macro'] > self.best_result:
+                    self.best_result = result['macro']
+                    if auto_save:
+                        self.best_vector = self.vectors
+
         self.get_embeddings()
+        if auto_save and label_file:
+            self.vectors = self.best_vector
 
     def get_embeddings(self):
         self.last_vectors = self.vectors
