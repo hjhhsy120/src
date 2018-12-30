@@ -18,6 +18,7 @@ from .grarep import GraRep
 import time
 import ast
 
+from . import app
 
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
@@ -54,7 +55,8 @@ def parse_args():
         'hope',
         'lap',
         'gf',
-        'sdne'
+        'sdne',
+        'app'
     ], help='The learning method')
     parser.add_argument('--label-file', default='',
                         help='The file of node label')
@@ -154,6 +156,12 @@ def main(args):
                                   num_paths=args.number_walks, dim=args.representation_size,
                                   workers=args.workers, window=args.window_size, dw=2,
                                   epoch=args.epochs)
+    elif args.method == 'app':
+        if args.label_file and not args.no_auto_save:
+            model = app.APP(graph=g, dim=args.representation_size, iters=args.number_walks,
+                            label_file=args.label_file, clf_ratio=args.clf_ratio)
+        else:
+            model = app.APP(graph=g, dim=args.representation_size, iters=args.number_walks)
     elif args.method == 'tadw':
         # assert args.label_file != ''
         assert args.feature_file != ''
