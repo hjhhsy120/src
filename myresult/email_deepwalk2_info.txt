@@ -10,3 +10,26 @@ Walk iteration:
 8 / 10
 9 / 10
 10 / 10
+Learning representation...
+Pre-procesing for non-uniform negative sampling!
+For positive: data size = 726826
+Small prob: 298049
+epoch:0 sum of loss:2019.79198416
+Training classifier using 50.00% nodes...
+{'micro': 0.5685884691848907, 'macro': 0.21886027635046515, 'samples': 0.5685884691848907, 'weighted': 0.48092665955811315}
+epoch:1 sum of loss:1890.9252056
+Training classifier using 50.00% nodes...
+{'micro': 0.64612326043737578, 'macro': 0.32271354771068722, 'samples': 0.64612326043737578, 'weighted': 0.58169854272800825}
+epoch:2 sum of loss:1884.15385392
+Training classifier using 50.00% nodes...
+{'micro': 0.6938369781312127, 'macro': 0.40143504555182635, 'samples': 0.6938369781312127, 'weighted': 0.65059701365405542}
+epoch:3 sum of loss:1880.95057783
+Training classifier using 50.00% nodes...
+{'micro': 0.69781312127236583, 'macro': 0.41539294687773842, 'samples': 0.69781312127236583, 'weighted': 0.65897097464869159}
+epoch:4 sum of loss:1879.03292583
+Training classifier using 50.00% nodes...
+{'micro': 0.71172962226640168, 'macro': 0.41637980296947141, 'samples': 0.71172962226640157, 'weighted': 0.6775082792471091}
+220.27742218971252
+Saving embeddings...
+Training classifier using 50.00% nodes...
+{'micro': 0.71172962226640168, 'macro': 0.41637980296947141, 'samples': 0.71172962226640157, 'weighted': 0.6775082792471091}

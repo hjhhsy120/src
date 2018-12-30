@@ -8,9 +8,9 @@ def myparser(sentences, window):
     for se in sentences:
         l = len(se)
         for hi in range(l):
-            for t in se[max(0, hi - window) : min(l, hi + window + 1)]:
-                if se[hi] != t:
-                    p = (se[hi], t)
+            for ti in range(max(0, hi - window), min(l, hi + window + 1)):
+                if hi != ti:
+                    p = (se[hi], se[ti])
                     if p in mypairs.keys():
                         mypairs[p] += 1.0
                     else:
@@ -22,9 +22,9 @@ def myparser0(sentences, window):
     for se in sentences:
         l = len(se)
         for hi in range(l):
-            for t in se[max(0, hi - window) : min(l, hi + window + 1)]:
-                if se[hi] != t:
-                    samples += [{0: se[hi], 1: t, "weight": 1.0}]
+            for ti in range(max(0, hi - window), min(l, hi + window + 1)):
+                if hi != ti:
+                    samples += [{0: se[hi], 1: se[ti], "weight": 1.0}]
     return samples
 
 class Node2vec(object):

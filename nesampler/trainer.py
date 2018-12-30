@@ -3,6 +3,8 @@ import random
 import math
 import numpy as np
 import tensorflow as tf
+from sklearn.linear_model import LogisticRegression
+from .classify import Classifier, read_node_label
 
 class _trainer(object):
 
@@ -223,6 +225,7 @@ class trainer(object):
                 epoch=10, negative_ratio=5, label_file=None, clf_ratio=0.5,
                 auto_save=True, ran=True, ngmode=0):
         self.rep_size = rep_size
+        self.best_result = 0
         self.vectors = {}
         self.model = _trainer(graph, samples, rep_size, batch_size,
                            negative_ratio, ran, ngmode)
