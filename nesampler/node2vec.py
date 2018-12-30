@@ -3,7 +3,7 @@ import time
 from . import walker
 from .trainer import trainer
 
-def myparser0(sentences, window):
+def myparser(sentences, window):
     mypairs = {}
     for se in sentences:
         l = len(se)
@@ -17,7 +17,7 @@ def myparser0(sentences, window):
                         mypairs[p] = 1.0
     return [{0: k[0], 1: k[1], "weight": mypairs[k]} for k in mypairs.keys()]
 
-def myparser(sentences, window):
+def myparser0(sentences, window):
     samples = []
     for se in sentences:
         l = len(se)

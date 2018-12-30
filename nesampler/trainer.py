@@ -2,13 +2,11 @@ from __future__ import print_function
 import random
 import math
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 import tensorflow as tf
-from .classify import Classifier, read_node_label
 
 class _trainer(object):
 
-    # ran: whether random batch; ngmode: 0 if degree^power/sum(~), 1 if uniform random
+    # ran: whether random batch; ngmode: 0 if degree^power/sum(~), 1 if uniform random for app
     def __init__(self, graph, samples, rep_size=128, batch_size=1000, negative_ratio=5, ran=True, ngmode=0):
         self.cur_epoch = 0
         self.g = graph
@@ -19,8 +17,8 @@ class _trainer(object):
         self.negative_ratio = negative_ratio
         self.ran = ran
         self.ngmode = ngmode
-
-        self.gen_sampling_table()
+        if ngmode != 1:
+            self.gen_sampling_table()
         self.sess = tf.Session()
         cur_seed = random.getrandbits(32)
         initializer = tf.contrib.layers.xavier_initializer(
@@ -99,16 +97,23 @@ class _trainer(object):
         end_index = min(start_index+self.batch_size, data_size)
         while start_index < data_size:
             if mod == 0:
-                sign = 1.
+                sign = 1
                 h = []
                 t = []
-                for i in range(start_index, end_index):
-                    if not random.random() < self.sample_prob[shuffle_indices[i]]:
-                        shuffle_indices[i] = self.sample_alias[shuffle_indices[i]]
-                    cur_h = samples[shuffle_indices[i]][0]
-                    cur_t = samples[shuffle_indices[i]][1]
-                    h.append(cur_h)
-                    t.append(cur_t)
+                if self.ngmode != 1:
+                    for i in range(start_index, end_index):
+                        if not random.random() < self.sample_prob[shuffle_indices[i]]:
+                            shuffle_indices[i] = self.sample_alias[shuffle_indices[i]]
+                        cur_h = look_up[samples[shuffle_indices[i]][0]]
+                        cur_t = look_up[samples[shuffle_indices[i]][1]]
+                        h.append(cur_h)
+                        t.append(cur_t)
+                else:
+                    for i in range(start_index, end_index):
+                        cur_h = look_up[samples[shuffle_indices[i]][0]]
+                        cur_t = look_up[samples[shuffle_indices[i]][1]]
+                        h.append(cur_h)
+                        t.append(cur_t)
             else:
                 sign = -1.
                 t = []
@@ -215,32 +220,14 @@ class _trainer(object):
 class trainer(object):
 
     def __init__(self, graph, samples, rep_size=128, batch_size=1000,
-                epoch=10, negative_ratio=5, label_file=None, clf_ratio=0.5,
-                auto_save=True, ran=True, ngmode=0):
+                epoch=10, negative_ratio=5, ran=True, ngmode=0):
         self.rep_size = rep_size
-        self.best_result = 0
         self.vectors = {}
         self.model = _trainer(graph, samples, rep_size, batch_size,
                            negative_ratio, ran, ngmode)
         for i in range(epoch):
             self.model.train_one_epoch()
-            if label_file:
-                self.get_embeddings()
-                X, Y = read_node_label(label_file)
-                print("Training classifier using {:.2f}% nodes...".format(
-                    clf_ratio*100))
-                clf = Classifier(vectors=self.vectors,
-                                 clf=LogisticRegression())
-                result = clf.split_train_evaluate(X, Y, clf_ratio)
-
-                if result['macro'] > self.best_result:
-                    self.best_result = result['macro']
-                    if auto_save:
-                        self.best_vector = self.vectors
-
         self.get_embeddings()
-        if auto_save and label_file:
-            self.vectors = self.best_vector
 
     def get_embeddings(self):
         self.last_vectors = self.vectors

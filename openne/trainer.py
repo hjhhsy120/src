@@ -104,14 +104,14 @@ class _trainer(object):
                     for i in range(start_index, end_index):
                         if not random.random() < self.sample_prob[shuffle_indices[i]]:
                             shuffle_indices[i] = self.sample_alias[shuffle_indices[i]]
-                        cur_h = samples[shuffle_indices[i]][0]
-                        cur_t = samples[shuffle_indices[i]][1]
+                        cur_h = look_up[samples[shuffle_indices[i]][0]]
+                        cur_t = look_up[samples[shuffle_indices[i]][1]]
                         h.append(cur_h)
                         t.append(cur_t)
                 else:
                     for i in range(start_index, end_index):
-                        cur_h = samples[shuffle_indices[i]][0]
-                        cur_t = samples[shuffle_indices[i]][1]
+                        cur_h = look_up[samples[shuffle_indices[i]][0]]
+                        cur_t = look_up[samples[shuffle_indices[i]][1]]
                         h.append(cur_h)
                         t.append(cur_t)
             else:

@@ -13,10 +13,10 @@ class APP(object):
         self.size = dim
         node_size = graph.node_size
         look_up = graph.look_up_dict
-        node_degree = np.zeros(node_size)  # out degree
-        for edge in G.edges():
-            node_degree[look_up[edge[0]]
-                        ] += G[edge[0]][edge[1]]["weight"]
+        # node_degree = np.zeros(node_size)  # out degree
+        # for edge in G.edges():
+        #     node_degree[look_up[edge[0]]
+        #                 ] += G[edge[0]][edge[1]]["weight"]
         nodes = list(G.nodes())
         print('Walking...')
         samples = []
