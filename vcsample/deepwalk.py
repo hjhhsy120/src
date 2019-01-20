@@ -5,7 +5,7 @@ import random
 
 class deepwalk(object):
     # fac*node_size is the size of v_sampling table (for each epoch)
-    def __init__(self, graph, window=6, walk_length=0, fac=50):
+    def __init__(self, graph, window=10, walk_length=10, fac=100):
         self.g = graph
         self.window = window
         self.walk_length = walk_length
