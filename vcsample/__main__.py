@@ -19,6 +19,8 @@ import time
 import ast
 
 from . import app
+from . import vctrainer
+from . import deepwalk
 
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
@@ -39,7 +41,7 @@ def parse_args():
                         help='Number of latent dimensions to learn for each node.')
     parser.add_argument('--window-size', default=10, type=int,
                         help='Window size of skipgram model.')
-    parser.add_argument('--epochs', default=5, type=int,
+    parser.add_argument('--epochs', default=10, type=int,
                         help='The training epochs of LINE and GCN')
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
@@ -136,16 +138,7 @@ def main(args):
             model = line.LINE(g, epoch=args.epochs,
                               rep_size=args.representation_size)
     elif args.method == 'deepWalk':
-        if args.label_file and not args.no_auto_save:
-            model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
-                                  num_paths=args.number_walks, dim=args.representation_size,
-                                  workers=args.workers, window=args.window_size, dw=1,
-                                  epoch=args.epochs, label_file=args.label_file, clf_ratio=args.clf_ratio)
-        else:
-            model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
-                                  num_paths=args.number_walks, dim=args.representation_size,
-                                  workers=args.workers, window=args.window_size, dw=1,
-                                  epoch=args.epochs)
+        model = deepwalk.deepwalk(graph=g, window=args.window_size)
     elif args.method == 'MHWalk':
         if args.label_file and not args.no_auto_save:
             model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
@@ -169,11 +162,7 @@ def main(args):
                                   workers=args.workers, window=args.window_size, dw=3,
                                   epoch=args.epochs)
     elif args.method == 'app':
-        if args.label_file and not args.no_auto_save:
-            model = app.APP(graph=g, dim=args.representation_size, iters=args.number_walks,
-                            label_file=args.label_file, clf_ratio=args.clf_ratio)
-        else:
-            model = app.APP(graph=g, dim=args.representation_size, iters=args.number_walks)
+            model = app.APP(graph=g)
     elif args.method == 'tadw':
         # assert args.label_file != ''
         assert args.feature_file != ''
@@ -205,6 +194,11 @@ def main(args):
     elif args.method == 'gf':
         model = gf.GraphFactorization(g, rep_size=args.representation_size,
                                       epoch=args.epochs, learning_rate=args.lr, weight_decay=args.weight_decay)
+    if args.method in ['deepWalk', 'app']:
+        trainer = vctrainer.vctrainer(g, model, model, rep_size=args.representation_size, epoch=args.epochs,
+                                        batch_size=1000, learning_rate=args.lr, negative_ratio=args.negative_ratio,
+                                        ngmode=1, label_file=None, clf_ratio=args.clf_ratio, auto_save=True)
+        model = trainer
     t2 = time.time()
     print(t2-t1)
     if args.method != 'gcn':
