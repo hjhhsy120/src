@@ -10,7 +10,7 @@ sample_v是采样“中心点”的generator，生成一个epoch的各个batch�
 
 对app而言，sample_v就是随机打乱节点顺序，然后每个节点依次取sample个，取满batch_size就yield，直到取完；sample_c就是遍历输入的序列，对每个中心点，从它出发以一定概率停止地走不超过10步，输出停止的节点lookup的标号。在email和cora上的结果不如原来的deepwalk，比原来的LINE好
 
-关于deepwalk，我现在想先用pagerank计算平稳分布，再建立一个固定大小的列表（点数的fac倍大小），使得节点在列表的出现次数和pagerank值成正比，通过这种方式采样中心点；采样context的时候，我想从中心点随机游走window步，将路径上的点都加入context。（实际操作的时候，记录了每个中心点对应的已走步数和当前位置，这样可以不受batch“隔断”的影响）。不过在email上的运行结果比LINE差，在Cora上的结果比APP稍差、比LINE好，不知道是不是哪里有问题。。
+关于deepwalk，我现在想先用pagerank计算平稳分布，再建立一个固定大小的列表（点数的fac倍大小），使得节点在列表的出现次数和pagerank值成正比，在sample_v中对列表做一遍random shuffle，然后依次取；采样context的时候，我想从中心点随机游走window步，将路径上的点都加入context。（实际操作的时候，记录了每个中心点对应的已走步数和当前位置，这样可以不受batch“隔断”的影响）。不过在email上的运行结果比LINE差，在Cora上的结果比APP稍差、比LINE好，不知道是不是哪里有问题。。
 
 link_prediction代码有点长，还没弄清楚怎么加进来。
 
