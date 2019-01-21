@@ -3,6 +3,8 @@
 ### 热力图
 热力图：第i行第j列的色块对应vertex i和context j的出现次数，次数过大的做了最大值限制。i和j的数值是相应节点的度数从小到大的排名（相当于将节点按度数从小到大排了序），超过5000个点则把所有点排名乘5000除以点数取整，以保证复杂度不会过大。现有email, cora, blogcatalog在deepwalk, lpwalk, app上的结果。
 
+相关代码：nesample/trainer在得到所有sample之后按每行“v c weight”格式输出到aaa.txt然后退出；pic.py读取sample信息和度数排序、绘制热力图；zrun_nesampler.bat是它的批处理文件。
+
 ### vc-sampling
 相关代码在vcsample文件夹下，现在主要是vctrainer.py和修改过的app.py，以及有点问题的deepwalk.py
 
