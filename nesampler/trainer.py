@@ -224,6 +224,11 @@ class trainer(object):
     def __init__(self, graph, samples, rep_size=128, batch_size=1000,
                 epoch=10, negative_ratio=5, label_file=None, clf_ratio=0.5,
                 auto_save=True, ran=True, ngmode=0):
+        f = open('aaa.txt', 'w')
+        for i in samples:
+            f.writelines([i[0], ' ', i[1], ' ', str(i['weight']), '\n'])
+        f.close()
+        exit()
         self.rep_size = rep_size
         self.best_result = 0
         self.vectors = {}

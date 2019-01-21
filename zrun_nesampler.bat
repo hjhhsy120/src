@@ -1,2 +1,3 @@
-python -u -m nesampler --method lpWalk --label-file mydata/email_label.txt --input mydata/email_edge.txt --graph-format edgelist --output myresult/email_lpwalk2_emd.txt > myresult/email_lpwalk2_info.txt
+python -u -m nesampler --method deepWalk --label-file mydata/cora_label.txt --input mydata/cora_edge.txt --graph-format edgelist --output myresult/cora_deepWalk2_emd.txt
+python pic.py 20 cora deepWalk
 pause
