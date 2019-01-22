@@ -5,20 +5,17 @@ import networkx as nx
 import pickle as pkl
 import numpy as np
 import scipy.sparse as sp
-import random
 
 __author__ = "Zhang Zhengyan"
 __email__ = "zhangzhengyan14@mails.tsinghua.edu.cn"
 
 
 class Graph(object):
-    def __init__(self, prop_pos=0.5, prop_neg=0.5):
+    def __init__(self):
         self.G = None
         self.look_up_dict = {}
         self.look_back_list = []
         self.node_size = 0
-        self.prop_pos = prop_pos
-        self.prop_neg = prop_neg
 
     def encode_node(self):
         look_up = self.look_up_dict
@@ -119,79 +116,3 @@ class Graph(object):
             vec = l.split()
             self.G[vec[0]][vec[1]]['label'] = vec[2:]
         fin.close()
-
-    def generate_pos_neg_links(self):
-        """
-        Select random existing edges in the graph to be postive links,
-        and random non-edges to be negative links.
-
-        Modify graph by removing the postive links.
-        """
-        random.seed()
-        # Select n edges at random (positive samples)
-        n_edges = self.G.number_of_edges()
-        n_nodes = self.G.number_of_nodes()
-        nodes = list(self.G.nodes())
-        edges = list(self.G.edges())
-        npos = int(self.prop_pos * n_edges)
-        nneg = int(self.prop_neg * n_edges)
-
-        # if not nx.is_connected(self.G):
-        #     raise RuntimeError("Input graph is not connected")
-
-        # n_neighbors = [len(list(self.G.neighbors(v))) for v in nodes]
-        # n_non_edges = n_nodes - 1 - np.array(n_neighbors)
-
-        # non_edges = [e for e in nx.non_edges(self.G)]
-        # print("Finding %d of %d non-edges" % (nneg, len(non_edges)))
-
-        # Select m pairs of non-edges (negative samples)
-        neg_edge_list = []
-        for i in range(nneg):
-            while True:
-                x1 = random.choice(nodes)
-                x2 = random.choice(nodes)
-                if not (x1, x2) in neg_edge_list and not (x1, x2) in edges:
-                    neg_edge_list += [(x1, x2)]
-                    break
-
-
-        print("Finding %d positive edges of %d total edges" % (npos, n_edges))
-
-        # Find positive edges, and remove them.
-        pos_edge_list = []
-        n_count = 0
-        n_ignored_count = 0
-        random.shuffle(edges)
-        for edge in edges:
-
-            # Remove edge from graph
-            data = self.G[edge[0]][edge[1]]
-            self.G.remove_edge(*edge)
-
-            # Check if graph is still connected
-            #TODO: We shouldn't be using a private function for bfs
-            reachable_from_v1 = nx.connected._plain_bfs(self.G, edge[0])
-            if edge[1] not in reachable_from_v1:
-                self.G.add_edge(*edge, **data)
-                n_ignored_count += 1
-            else:
-                pos_edge_list.append(edge)
-                # print("Found: %d    " % (n_count), end="\r")
-                n_count += 1
-
-            # Exit if we've found npos nodes or we have gone through the whole list
-            if n_count >= npos:
-                break
-
-        if len(pos_edge_list) < npos:
-            raise RuntimeWarning("Only %d positive edges found." % (n_count))
-
-        self._pos_edge_list = pos_edge_list
-        self._neg_edge_list = neg_edge_list
-
-    def get_selected_edges(self):
-        edges = self._pos_edge_list + self._neg_edge_list
-        labels = np.zeros(len(edges))
-        labels[:len(self._pos_edge_list)] = 1
-        return edges, labels

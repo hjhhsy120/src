@@ -4,39 +4,23 @@ import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sklearn.linear_model import LogisticRegression
 from .graph import *
+from . import node2vec
 from .classify import Classifier, read_node_label
+from . import line
+from . import tadw
+from .gcn import gcnAPI
+from . import lle
+from . import hope
+from . import lap
+from . import gf
+from . import sdne
 from .grarep import GraRep
 import time
+import ast
 
 from . import app
 from . import vctrainer
 from . import deepwalk
-
-import pickle
-from sklearn import metrics, model_selection, pipeline
-from sklearn.preprocessing import StandardScaler
-import os
-
-default_params = {
-    'log2p': 0,                     # Parameter p, p = 2**log2p
-    'log2q': 0,                     # Parameter q, q = 2**log2q
-    'log2d': 7,                     # Feature size, dimensions = 2**log2d
-    'num_walks': 10,                # Number of walks from each node
-    'walk_length': 80,              # Walk length
-    'window_size': 10,              # Context size for word2vec
-    'edge_function': "hadamard",    # Default edge function to use
-    "prop_pos": 0.5,                # Proportion of edges to remove nad use as positive samples
-    "prop_neg": 0.5,                # Number of non-edges to use as negative samples
-                                    #  (as a proportion of existing edges, same as prop_pos)
-}
-
-edge_functions = {
-    "hadamard": lambda a, b: a * b,
-    "average": lambda a, b: 0.5 * (a + b),
-    "l1": lambda a, b: np.abs(a - b),
-    "l2": lambda a, b: np.abs(a - b) ** 2,
-}
-
 
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
@@ -62,7 +46,19 @@ def parse_args():
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
     parser.add_argument('--method', required=True, choices=[
+        'node2vec',
         'deepWalk',
+        'MHWalk',
+        'lpWalk',
+        'line',
+        'gcn',
+        'grarep',
+        'tadw',
+        'lle',
+        'hope',
+        'lap',
+        'gf',
+        'sdne',
         'app'
     ], help='The learning method')
     parser.add_argument('--label-file', default='',
@@ -112,116 +108,92 @@ def parse_args():
 
     return args
 
-def create_train_test_graphs(args):
-    """
-    Create and cache train & test graphs.
-    Will load from cache if exists unless --regen option is given.
-
-    :param args:
-    :return:
-        Gtrain, Gtest: Train & test graphs
-    """
-    # Remove half the edges, and the same number of "negative" edges
-    prop_pos = default_params['prop_pos']
-    prop_neg = default_params['prop_neg']
-
-    # Create random training and test graphs with different random edge selections
-    cached_fn = "%s.graph" % (os.path.basename(args.input))
-    if os.path.exists(cached_fn):
-        print("Loading link prediction graphs from %s" % cached_fn)
-        with open(cached_fn, 'rb') as f:
-            cache_data = pickle.load(f)
-        Gtrain = cache_data['g_train']
-    else:
-        print("Regenerating link prediction graphs")
-        # Train graph embeddings on graph with random links
-        Gtrain = Graph(prop_pos=prop_pos,
-                          prop_neg=prop_neg)
-        if args.graph_format == 'adjlist':
-            Gtrain.read_adjlist(filename=args.input)
-        elif args.graph_format == 'edgelist':
-            Gtrain.read_edgelist(filename=args.input, weighted=args.weighted,
-                        directed=args.directed)
-        Gtrain.generate_pos_neg_links()
-
-        # Cache generated  graph
-        cache_data = {'g_train': Gtrain}
-        with open(cached_fn, 'wb') as f:
-            pickle.dump(cache_data, f)
-
-    return Gtrain
-
-def edges_to_features(model, edge_list, edge_function, dimensions):
-    n_tot = len(edge_list)
-    feature_vec = np.empty((n_tot, dimensions), dtype='f')
-
-    # Iterate over edges
-    for ii in range(n_tot):
-        v1, v2 = edge_list[ii]
-
-        # Edge-node features
-        emb1 = np.asarray(model.vectors[str(v1)])
-        emb2 = np.asarray(model.vectors[str(v2)])
-
-        # Calculate edge feature
-        feature_vec[ii] = edge_function(emb1, emb2)
-
-    return feature_vec
-
-def test_edge_functions(args):
-    t1 = time.time()
-    print("Reading...")
-    Gtrain = create_train_test_graphs(args)
-
-    # Train and test graphs, with different edges
-    edges_train, labels_train = Gtrain.get_selected_edges()
-    # edges_test, labels_test = Gtest.get_selected_edges()
-
-    # With fixed test & train graphs (these are expensive to generate)
-    # we perform k iterations of the algorithm
-    # TODO: It would be nice if the walks had a settable random seed
-    aucs = {name: [] for name in edge_functions}
-
-    # Learn embeddings with current parameter values
-    if args.method == 'deepWalk':
-        model = deepwalk.deepwalk(graph=Gtrain, window=args.window_size)
-    elif args.method == 'app':
-        model = app.APP(graph=Gtrain)
-    trainer = vctrainer.vctrainer(Gtrain, model, model, rep_size=args.representation_size, epoch=args.epochs,
-                                    batch_size=1000, learning_rate=args.lr, negative_ratio=args.negative_ratio,
-                                    ngmode=1, label_file=None, clf_ratio=args.clf_ratio, auto_save=True)
-    model = trainer
-    for edge_fn_name, edge_fn in edge_functions.items():
-        # Calculate edge embeddings using binary function
-        edge_features_train = edges_to_features(model, edges_train, edge_fn, args.representation_size)
-
-        # Linear classifier
-        scaler = StandardScaler()
-        lin_clf = LogisticRegression(C=1)
-        clf = pipeline.make_pipeline(scaler, lin_clf)
-
-        # Train classifier
-        clf.fit(edge_features_train, labels_train)
-        auc_train = metrics.scorer.roc_auc_scorer(clf, edge_features_train, labels_train)
-
-        aucs[edge_fn_name].append(auc_train)
-
-    print("Edge function test performance (AUC):")
-    for edge_name in aucs:
-        auc_mean = np.mean(aucs[edge_name])
-        auc_std = np.std(aucs[edge_name])
-        print("[%s] mean: %.4g +/- %.3g" % (edge_name, auc_mean, auc_std))
-
-    return aucs
 
 def main(args):
-    test_edge_functions(args)
-'''
-    if args.method == 'deepWalk':
-        model = deepwalk.deepwalk(graph=g, window=args.window_size)
-    elif args.method == 'app':
-        model = app.APP(graph=g)
+    t1 = time.time()
+    g = Graph()
+    print("Reading...")
 
+    if args.graph_format == 'adjlist':
+        g.read_adjlist(filename=args.input)
+    elif args.graph_format == 'edgelist':
+        g.read_edgelist(filename=args.input, weighted=args.weighted,
+                        directed=args.directed)
+    if args.method == 'node2vec':
+        if args.label_file and not args.no_auto_save:
+            model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
+                                      num_paths=args.number_walks, dim=args.representation_size,
+                                      workers=args.workers, p=args.p, q=args.q, window=args.window_size,
+                                      epoch=args.epochs, label_file=args.label_file, clf_ratio=args.clf_ratio)
+        else:
+            model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
+                                      num_paths=args.number_walks, dim=args.representation_size,
+                                      workers=args.workers, p=args.p, q=args.q, window=args.window_size,
+                                      epoch=args.epochs)
+    elif args.method == 'line':
+        if args.label_file and not args.no_auto_save:
+            model = line.LINE(g, epoch=args.epochs, rep_size=args.representation_size,
+                              label_file=args.label_file, clf_ratio=args.clf_ratio)
+        else:
+            model = line.LINE(g, epoch=args.epochs,
+                              rep_size=args.representation_size)
+    elif args.method == 'deepWalk':
+        model = deepwalk.deepwalk(graph=g, window=args.window_size)
+    elif args.method == 'MHWalk':
+        if args.label_file and not args.no_auto_save:
+            model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
+                                  num_paths=args.number_walks, dim=args.representation_size,
+                                  workers=args.workers, window=args.window_size, dw=2,
+                                  epoch=args.epochs, label_file=args.label_file, clf_ratio=args.clf_ratio)
+        else:
+            model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
+                                  num_paths=args.number_walks, dim=args.representation_size,
+                                  workers=args.workers, window=args.window_size, dw=2,
+                                  epoch=args.epochs)
+    elif args.method == 'lpWalk':
+        if args.label_file and not args.no_auto_save:
+            model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
+                                  num_paths=args.number_walks, dim=args.representation_size,
+                                  workers=args.workers, window=args.window_size, dw=3,
+                                  epoch=args.epochs, label_file=args.label_file, clf_ratio=args.clf_ratio)
+        else:
+            model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
+                                  num_paths=args.number_walks, dim=args.representation_size,
+                                  workers=args.workers, window=args.window_size, dw=3,
+                                  epoch=args.epochs)
+    elif args.method == 'app':
+            model = app.APP(graph=g)
+    elif args.method == 'tadw':
+        # assert args.label_file != ''
+        assert args.feature_file != ''
+        g.read_node_label(args.label_file)
+        g.read_node_features(args.feature_file)
+        model = tadw.TADW(
+            graph=g, dim=args.representation_size, lamb=args.lamb)
+    elif args.method == 'gcn':
+        assert args.label_file != ''
+        assert args.feature_file != ''
+        g.read_node_label(args.label_file)
+        g.read_node_features(args.feature_file)
+        model = gcnAPI.GCN(graph=g, dropout=args.dropout,
+                           weight_decay=args.weight_decay, hidden1=args.hidden,
+                           epochs=args.epochs, clf_ratio=args.clf_ratio)
+    elif args.method == 'grarep':
+        model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
+    elif args.method == 'lle':
+        model = lle.LLE(graph=g, d=args.representation_size)
+    elif args.method == 'hope':
+        model = hope.HOPE(graph=g, d=args.representation_size)
+    elif args.method == 'sdne':
+        encoder_layer_list = ast.literal_eval(args.encoder_list)
+        model = sdne.SDNE(g, encoder_layer_list=encoder_layer_list,
+                          alpha=args.alpha, beta=args.beta, nu1=args.nu1, nu2=args.nu2,
+                          batch_size=args.bs, epoch=args.epochs, learning_rate=args.lr)
+    elif args.method == 'lap':
+        model = lap.LaplacianEigenmaps(g, rep_size=args.representation_size)
+    elif args.method == 'gf':
+        model = gf.GraphFactorization(g, rep_size=args.representation_size,
+                                      epoch=args.epochs, learning_rate=args.lr, weight_decay=args.weight_decay)
     if args.method in ['deepWalk', 'app']:
         trainer = vctrainer.vctrainer(g, model, model, rep_size=args.representation_size, epoch=args.epochs,
                                         batch_size=1000, learning_rate=args.lr, negative_ratio=args.negative_ratio,
@@ -239,7 +211,7 @@ def main(args):
             args.clf_ratio*100))
         clf = Classifier(vectors=vectors, clf=LogisticRegression())
         clf.split_train_evaluate(X, Y, args.clf_ratio)
-'''
+
 
 if __name__ == "__main__":
     random.seed(32)
