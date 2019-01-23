@@ -1,7 +1,9 @@
 # src
 
 ### link prediction
-把link prediction的代码加入了vcsample框架。现在__main__.py是link prediction的代码，main0.py是原先节点分类的代码。目前能正常运行。不过细节方面可能有一些问题有待修正：openne是把所有图都视作有向图的，对无向图是同时加入了正向、反向边，而在删除边只会删除其中一条边，所以可能有问题；另外，因为几个边embedding计算函数都是关于节点对称的函数，所以不能反映有向图的方向性。
+把link prediction的代码加入了vcsample框架。现在__main__.py是link prediction的代码，main0.py是原先节点分类的代码。目前能正常运行。
+过程：将原图一半的边删去（保证连通性），然后用剩下的部分做节点embedding，再把删去的边作为正例、不在原图的边作为负例，训练分类器，去AUC作为指标。
+细节：对无向图，删除了自环；因为是按有向图存储的（每条边都是对应正反向各一条），所以删边的时候总是两条同时删去，评测的正例只取其中一条，负例也保证只取其中一个方向。
 
 ### 热力图
 热力图：第i行第j列的色块对应vertex i和context j的出现次数，次数过大的做了最大值限制。i和j的数值是相应节点的度数从小到大的排名（相当于将节点按度数从小到大排了序），超过5000个点则把所有点排名乘5000除以点数取整，以保证复杂度不会过大。现有email, cora, blogcatalog在deepwalk, lpwalk, app上的结果，node2vec做了email上grid search 0.25, 1.0, 4.0，在mypic文件夹下。
