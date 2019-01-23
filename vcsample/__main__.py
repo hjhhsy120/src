@@ -104,6 +104,8 @@ def parse_args():
     parser.add_argument('--encoder-list', default='[1000, 128]', type=str,
                         help='a list of numbers of the neuron at each encoder layer, the last number is the '
                              'dimension of the output node representation')
+    parser.add_argument('--link-prediction', action='store_true',
+                        help='Link prediction task.')
     args = parser.parse_args()
 
     if args.method != 'gcn' and not args.output:
@@ -215,8 +217,17 @@ def test_edge_functions(args):
     return aucs
 
 def main(args):
-    test_edge_functions(args)
-'''
+    if args.link_prediction:
+        test_edge_functions(args)
+        return
+    t1 = time.time()
+    print("Reading...")
+    g = Graph()
+    if args.graph_format == 'adjlist':
+        g.read_adjlist(filename=args.input)
+    elif args.graph_format == 'edgelist':
+        g.read_edgelist(filename=args.input, weighted=args.weighted,
+                    directed=args.directed)
     if args.method == 'deepWalk':
         model = deepwalk.deepwalk(graph=g, window=args.window_size)
     elif args.method == 'app':
@@ -239,7 +250,6 @@ def main(args):
             args.clf_ratio*100))
         clf = Classifier(vectors=vectors, clf=LogisticRegression())
         clf.split_train_evaluate(X, Y, args.clf_ratio)
-'''
 
 if __name__ == "__main__":
     random.seed(32)

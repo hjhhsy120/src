@@ -1,5 +1,5 @@
 
-data_name = 'email'
+data_name = 'cora'
 ot = open(data_name + '_con_edge.txt', 'w')
 otl = open(data_name + '_con_label.txt', 'w')
 f = open(data_name + '_edge.txt', 'r')

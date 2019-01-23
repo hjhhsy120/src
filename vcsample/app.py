@@ -19,7 +19,8 @@ class APP(object):
         except:
             nodes = []
             for root in self.g.G.nodes():
-                if self.g.G.degree(root) > 0:
+                nbrs = list(self.g.G.neighbors(root))
+                if len(nbrs) > 0:
                     nodes += [root]
             self.nodes = nodes
         look_up = self.g.look_up_dict
@@ -53,6 +54,8 @@ class APP(object):
                 if jump < jump_factor:
                     break
                 cur_nbrs = list(G.neighbors(iid))
+                if len(cur_nbrs) == 0:
+                    break
                 iid = random.choice(cur_nbrs)
             t += [look_up[iid]]
         return t
@@ -84,6 +87,8 @@ class APP(object):
                         break
                     iid = random.choice(cur_nbrs)
                     cur_nbrs = list(G.neighbors(iid))
+                    if len(cur_nbrs) == 0:
+                        break
                 if iid != -1:
                     cnt += 1
                     h += [look_up[root]]
