@@ -1,10 +1,27 @@
 
-data_name = 'dblp'
-ot = open(data_name + '_part_info.txt', 'w')
+data_name = 'email_con'
+# ot = open(data_name + '_part_info.txt', 'w')
 f = open(data_name + '_edge.txt', 'r')
 ls = f.readlines()
 f.close()
 d = {}
+s = set()
+cnt = 0
+cnt2 = 0
+for l in ls:
+    ids = l.strip().split(' ')
+    pa = (ids[0], ids[1])
+    if pa in s:
+        cnt += 1
+    s.add(pa)
+    if ids[0] == ids[1]:
+        continue
+    pa = (ids[1], ids[0])
+    if pa in s:
+        cnt2 += 1
+print(cnt, cnt2)
+print(len(s))
+exit()
 for l in ls:
     ids = l.split('\n')[0].split(' ')
     if ids[0] in d.keys():

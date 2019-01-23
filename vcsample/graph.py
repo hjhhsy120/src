@@ -45,7 +45,7 @@ class Graph(object):
 
     def read_edgelist(self, filename, weighted=False, directed=False):
         self.G = nx.DiGraph()
-
+        self.directed = directed
         if directed:
             def read_unweighted(l):
                 src, dst = l.split()
@@ -57,8 +57,13 @@ class Graph(object):
                 self.G.add_edge(src, dst)
                 self.G[src][dst]['weight'] = float(w)
         else:
+            self.uedges = []
             def read_unweighted(l):
                 src, dst = l.split()
+                if src == dst:
+                    return
+                if not (dst, src) in self.uedges:
+                    self.uedges += [(src, dst)]
                 self.G.add_edge(src, dst)
                 self.G.add_edge(dst, src)
                 self.G[src][dst]['weight'] = 1.0
@@ -66,6 +71,10 @@ class Graph(object):
 
             def read_weighted(l):
                 src, dst, w = l.split()
+                if src == dst:
+                    return
+                if not (dst, src) in self.uedges:
+                    self.uedges += [(src, dst)]
                 self.G.add_edge(src, dst)
                 self.G.add_edge(dst, src)
                 self.G[src][dst]['weight'] = float(w)
@@ -129,10 +138,14 @@ class Graph(object):
         """
         random.seed()
         # Select n edges at random (positive samples)
-        n_edges = self.G.number_of_edges()
-        n_nodes = self.G.number_of_nodes()
         nodes = list(self.G.nodes())
-        edges = list(self.G.edges())
+        n_nodes = len(nodes)
+        all_edges = list(self.G.edges())
+        if self.directed:
+            edges = all_edges
+        else:
+            edges = self.uedges
+        n_edges = len(edges)
         npos = int(self.prop_pos * n_edges)
         nneg = int(self.prop_neg * n_edges)
 
@@ -151,7 +164,7 @@ class Graph(object):
             while True:
                 x1 = random.choice(nodes)
                 x2 = random.choice(nodes)
-                if not (x1, x2) in neg_edge_list and not (x1, x2) in edges:
+                if not (x1, x2) in neg_edge_list and not (x2, x1) in neg_edge_list and not (x1, x2) in all_edges:
                     neg_edge_list += [(x1, x2)]
                     break
 
@@ -168,12 +181,17 @@ class Graph(object):
             # Remove edge from graph
             data = self.G[edge[0]][edge[1]]
             self.G.remove_edge(*edge)
+            if not self.directed:
+                data_r = self.G[edge[1]][edge[0]]
+                self.G.remove_edge(edge[1], edge[0])
 
             # Check if graph is still connected
             #TODO: We shouldn't be using a private function for bfs
             reachable_from_v1 = nx.connected._plain_bfs(self.G, edge[0])
             if edge[1] not in reachable_from_v1:
                 self.G.add_edge(*edge, **data)
+                if not self.directed:
+                    self.G.add_edge(edge[1], edge[0], **data_r)
                 n_ignored_count += 1
             else:
                 pos_edge_list.append(edge)
