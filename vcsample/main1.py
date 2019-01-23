@@ -5,6 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sklearn.linear_model import LogisticRegression
 from .graph import *
 from .classify import Classifier, read_node_label
+from .grarep import GraRep
 import time
 
 from . import app
@@ -15,7 +16,6 @@ import pickle
 from sklearn import metrics, model_selection, pipeline
 from sklearn.preprocessing import StandardScaler
 import os
-import tensorflow as tf
 
 default_params = {
     'log2p': 0,                     # Parameter p, p = 2**log2p
@@ -170,38 +170,7 @@ def edges_to_features(model, edge_list, edge_function, dimensions):
 
     return feature_vec
 
-def batch_iter(model, edges, labels, batch_size):
-    tot = len(labels)
-    idx = np.random.permutation(tot)
-    v1s = []
-    v2s = []
-    ls = []
-    for i in range(tot):
-        v1s += [model.vectors[edges[idx[i]][0]]]
-        v2s += [model.vectors[edges[idx[i]][1]]]
-        ls += [labels[idx[i]]]
-        if (i + 1) % batch_size == 0:
-            yield v1s, v2s, ls
-            v1s = []
-            v2s = []
-            ls = []
-    if ls != []:
-        yield v1s, v2s, ls
-
-def full_batch(model, edges, labels):
-    tot = len(labels)
-    idx = np.random.permutation(tot)
-    v1s = []
-    v2s = []
-    ls = []
-    for i in range(tot):
-        v1s += [model.vectors[edges[idx[i]][0]]]
-        v2s += [model.vectors[edges[idx[i]][1]]]
-        ls += [labels[idx[i]]]
-    return v1s, v2s, ls
-
 def test_edge_functions(args):
-    dims = args.representation_size
     t1 = time.time()
     print("Reading...")
     Gtrain = create_train_test_graphs(args)
@@ -220,51 +189,13 @@ def test_edge_functions(args):
         model = deepwalk.deepwalk(graph=Gtrain, window=args.window_size)
     elif args.method == 'app':
         model = app.APP(graph=Gtrain)
-    trainer = vctrainer.vctrainer(Gtrain, model, model, rep_size=dims, epoch=args.epochs,
+    trainer = vctrainer.vctrainer(Gtrain, model, model, rep_size=args.representation_size, epoch=args.epochs,
                                     batch_size=1000, learning_rate=args.lr, negative_ratio=args.negative_ratio,
                                     ngmode=1, label_file=None, clf_ratio=args.clf_ratio, auto_save=True)
-    t2 = time.time()
-    print("time: {}".format(t2-t1))
     model = trainer
-    cur_seed = random.getrandbits(32)
-    v1 = tf.placeholder(tf.float32, [None, dims])
-    v2 = tf.placeholder(tf.float32, [None, dims])
-    y = tf.placeholder(tf.float32, [None])
-    w = tf.get_variable(name="w", shape=[
-                dims, dims], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
-    v1w = tf.matmul(v1, w)
-    score = tf.sigmoid(tf.reduce_mean(tf.multiply(v1w, v2), 1))
-    loss = tf.reduce_mean(tf.square(score - y))
-    optimizer = tf.train.AdamOptimizer(0.1)
-    train = optimizer.minimize(loss)
-    auc_value, auc_op = tf.metrics.auc(y, score)
-
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
-    sess.run(tf.local_variables_initializer())
-    allv1s, allv2s, allls = full_batch(model, edges_train, labels_train)
-    d = {v1: allv1s, v2: allv2s, y:allls}
-    cnt = 0
-    print(len(allls))
-    precost = 1.
-    for i in range(100):
-        for v1s, v2s, ls in batch_iter(model, edges_train, labels_train, 100):
-            sess.run(train, feed_dict = {v1: v1s, v2: v2s, y: ls})
-            cnt += 1
-        if (i + 1) % 10 == 0:
-            cost = sess.run(loss, feed_dict = d)
-            print("epoch {} (iter {}): loss = {}".format(i+1, cnt, cost))
-            if precost - cost < 0.001:
-                break
-            precost = cost
-    sess.run(auc_op, feed_dict = d)
-    auc = sess.run(auc_value, feed_dict = d)
-    print("AUC: {}".format(auc))
-    return auc
-
     for edge_fn_name, edge_fn in edge_functions.items():
         # Calculate edge embeddings using binary function
-        edge_features_train = edges_to_features(model, edges_train, edge_fn, dims)
+        edge_features_train = edges_to_features(model, edges_train, edge_fn, args.representation_size)
 
         # Linear classifier
         scaler = StandardScaler()
