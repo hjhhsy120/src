@@ -51,11 +51,11 @@ class Classifier(object):
         Y = self.clf.predict(X_, top_k_list=top_k_list)
         return Y
 
-    def split_train_evaluate(self, X, Y, train_precent, seed=0):
+    def split_train_evaluate(self, X, Y, train_precent):
         state = numpy.random.get_state()
 
         training_size = int(train_precent * len(X))
-        numpy.random.seed(seed)
+        numpy.random.seed()
         shuffle_indices = numpy.random.permutation(numpy.arange(len(X)))
         X_train = [X[shuffle_indices[i]] for i in range(training_size)]
         Y_train = [Y[shuffle_indices[i]] for i in range(training_size)]
@@ -85,14 +85,12 @@ def load_embeddings(filename):
 
 def read_node_label(filename):
     fin = open(filename, 'r')
-    X = []
-    Y = []
+    labels = {}
     while 1:
         l = fin.readline()
         if l == '':
             break
         vec = l.strip().split(' ')
-        X.append(vec[0])
-        Y.append(vec[1:])
+        labels[vec[0]] = vec[1:]
     fin.close()
-    return X, Y
+    return labels

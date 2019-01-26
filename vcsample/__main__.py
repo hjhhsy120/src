@@ -10,33 +10,9 @@ import time
 from . import app
 from . import vctrainer
 from . import deepwalk
-
-import pickle
-from sklearn import metrics, model_selection, pipeline
-from sklearn.preprocessing import StandardScaler
-import os
-import tensorflow as tf
-
-default_params = {
-    'log2p': 0,                     # Parameter p, p = 2**log2p
-    'log2q': 0,                     # Parameter q, q = 2**log2q
-    'log2d': 7,                     # Feature size, dimensions = 2**log2d
-    'num_walks': 10,                # Number of walks from each node
-    'walk_length': 80,              # Walk length
-    'window_size': 10,              # Context size for word2vec
-    'edge_function': "hadamard",    # Default edge function to use
-    "prop_pos": 0.5,                # Proportion of edges to remove nad use as positive samples
-    "prop_neg": 0.5,                # Number of non-edges to use as negative samples
-                                    #  (as a proportion of existing edges, same as prop_pos)
-}
-
-edge_functions = {
-    "hadamard": lambda a, b: a * b,
-    "average": lambda a, b: 0.5 * (a + b),
-    "l1": lambda a, b: np.abs(a - b),
-    "l2": lambda a, b: np.abs(a - b) ** 2,
-}
-
+from . import link
+from .reconstr import reconstr
+from .clustering import clustering
 
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
@@ -104,8 +80,21 @@ def parse_args():
     parser.add_argument('--encoder-list', default='[1000, 128]', type=str,
                         help='a list of numbers of the neuron at each encoder layer, the last number is the '
                              'dimension of the output node representation')
+
+    parser.add_argument('--prop-pos', default=0.5, type=float,
+                        help='proportion of positive edges for link prediction')
+    parser.add_argument('--prop-neg', default=0.5, type=float,
+                        help='proportion of negative edges for link prediction')
     parser.add_argument('--link-prediction', action='store_true',
                         help='Link prediction task.')
+    parser.add_argument('--reconstruction', action='store_true',
+                        help='Network reconstruction task.')
+    parser.add_argument('--clustering', action='store_true',
+                        help='Vertex clustering task.')
+    parser.add_argument('--visualization', action='store_true',
+                        help='Visualization after clustering task.')
+    parser.add_argument('--exp-times', default=1, type=int,
+                        help='How many times of experiments')
     args = parser.parse_args()
 
     if args.method != 'gcn' and not args.output:
@@ -114,180 +103,9 @@ def parse_args():
 
     return args
 
-def create_train_test_graphs(args):
-    """
-    Create and cache train & test graphs.
-    Will load from cache if exists unless --regen option is given.
-
-    :param args:
-    :return:
-        Gtrain, Gtest: Train & test graphs
-    """
-    # Remove half the edges, and the same number of "negative" edges
-    prop_pos = default_params['prop_pos']
-    prop_neg = default_params['prop_neg']
-
-    # Create random training and test graphs with different random edge selections
-    cached_fn = "%s.graph" % (os.path.basename(args.input))
-    if os.path.exists(cached_fn):
-        print("Loading link prediction graphs from %s" % cached_fn)
-        with open(cached_fn, 'rb') as f:
-            cache_data = pickle.load(f)
-        Gtrain = cache_data['g_train']
-    else:
-        print("Regenerating link prediction graphs")
-        # Train graph embeddings on graph with random links
-        Gtrain = Graph(prop_pos=prop_pos,
-                          prop_neg=prop_neg)
-        if args.graph_format == 'adjlist':
-            Gtrain.read_adjlist(filename=args.input)
-        elif args.graph_format == 'edgelist':
-            Gtrain.read_edgelist(filename=args.input, weighted=args.weighted,
-                        directed=args.directed)
-        Gtrain.generate_pos_neg_links()
-
-        # Cache generated  graph
-        cache_data = {'g_train': Gtrain}
-        with open(cached_fn, 'wb') as f:
-            pickle.dump(cache_data, f)
-
-    return Gtrain
-
-def edges_to_features(model, edge_list, edge_function, dimensions):
-    n_tot = len(edge_list)
-    feature_vec = np.empty((n_tot, dimensions), dtype='f')
-
-    # Iterate over edges
-    for ii in range(n_tot):
-        v1, v2 = edge_list[ii]
-
-        # Edge-node features
-        emb1 = np.asarray(model.vectors[str(v1)])
-        emb2 = np.asarray(model.vectors[str(v2)])
-
-        # Calculate edge feature
-        feature_vec[ii] = edge_function(emb1, emb2)
-
-    return feature_vec
-
-def batch_iter(model, edges, labels, batch_size):
-    tot = len(labels)
-    idx = np.random.permutation(tot)
-    v1s = []
-    v2s = []
-    ls = []
-    for i in range(tot):
-        v1s += [model.vectors[edges[idx[i]][0]]]
-        v2s += [model.vectors[edges[idx[i]][1]]]
-        ls += [labels[idx[i]]]
-        if (i + 1) % batch_size == 0:
-            yield v1s, v2s, ls
-            v1s = []
-            v2s = []
-            ls = []
-    if ls != []:
-        yield v1s, v2s, ls
-
-def full_batch(model, edges, labels):
-    tot = len(labels)
-    idx = np.random.permutation(tot)
-    v1s = []
-    v2s = []
-    ls = []
-    for i in range(tot):
-        v1s += [model.vectors[edges[idx[i]][0]]]
-        v2s += [model.vectors[edges[idx[i]][1]]]
-        ls += [labels[idx[i]]]
-    return v1s, v2s, ls
-
-def test_edge_functions(args):
-    dims = args.representation_size
-    t1 = time.time()
-    print("Reading...")
-    Gtrain = create_train_test_graphs(args)
-
-    # Train and test graphs, with different edges
-    edges_train, labels_train = Gtrain.get_selected_edges()
-    # edges_test, labels_test = Gtest.get_selected_edges()
-
-    # With fixed test & train graphs (these are expensive to generate)
-    # we perform k iterations of the algorithm
-    # TODO: It would be nice if the walks had a settable random seed
-    aucs = {name: [] for name in edge_functions}
-
-    # Learn embeddings with current parameter values
-    if args.method == 'deepWalk':
-        model = deepwalk.deepwalk(graph=Gtrain, window=args.window_size)
-    elif args.method == 'app':
-        model = app.APP(graph=Gtrain)
-    trainer = vctrainer.vctrainer(Gtrain, model, model, rep_size=dims, epoch=args.epochs,
-                                    batch_size=1000, learning_rate=args.lr, negative_ratio=args.negative_ratio,
-                                    ngmode=1, label_file=None, clf_ratio=args.clf_ratio, auto_save=True)
-    t2 = time.time()
-    print("time: {}".format(t2-t1))
-    model = trainer
-    cur_seed = random.getrandbits(32)
-    v1 = tf.placeholder(tf.float32, [None, dims])
-    v2 = tf.placeholder(tf.float32, [None, dims])
-    y = tf.placeholder(tf.float32, [None])
-    w = tf.get_variable(name="w", shape=[
-                dims, dims], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
-    v1w = tf.matmul(v1, w)
-    score = tf.sigmoid(tf.reduce_mean(tf.multiply(v1w, v2), 1))
-    loss = tf.reduce_mean(tf.square(score - y))
-    optimizer = tf.train.AdamOptimizer(0.1)
-    train = optimizer.minimize(loss)
-    auc_value, auc_op = tf.metrics.auc(y, score)
-
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
-    sess.run(tf.local_variables_initializer())
-    allv1s, allv2s, allls = full_batch(model, edges_train, labels_train)
-    d = {v1: allv1s, v2: allv2s, y:allls}
-    cnt = 0
-    print(len(allls))
-    precost = 1.
-    for i in range(100):
-        for v1s, v2s, ls in batch_iter(model, edges_train, labels_train, 100):
-            sess.run(train, feed_dict = {v1: v1s, v2: v2s, y: ls})
-            cnt += 1
-        if (i + 1) % 10 == 0:
-            cost = sess.run(loss, feed_dict = d)
-            print("epoch {} (iter {}): loss = {}".format(i+1, cnt, cost))
-            if precost - cost < 0.001:
-                break
-            precost = cost
-    sess.run(auc_op, feed_dict = d)
-    auc = sess.run(auc_value, feed_dict = d)
-    print("AUC: {}".format(auc))
-    return auc
-
-    for edge_fn_name, edge_fn in edge_functions.items():
-        # Calculate edge embeddings using binary function
-        edge_features_train = edges_to_features(model, edges_train, edge_fn, dims)
-
-        # Linear classifier
-        scaler = StandardScaler()
-        lin_clf = LogisticRegression(C=1)
-        clf = pipeline.make_pipeline(scaler, lin_clf)
-
-        # Train classifier
-        clf.fit(edge_features_train, labels_train)
-        auc_train = metrics.scorer.roc_auc_scorer(clf, edge_features_train, labels_train)
-
-        aucs[edge_fn_name].append(auc_train)
-
-    print("Edge function test performance (AUC):")
-    for edge_name in aucs:
-        auc_mean = np.mean(aucs[edge_name])
-        auc_std = np.std(aucs[edge_name])
-        print("[%s] mean: %.4g +/- %.3g" % (edge_name, auc_mean, auc_std))
-
-    return aucs
-
 def main(args):
     if args.link_prediction:
-        test_edge_functions(args)
+        link.test_edge_functions(args)
         return
     t1 = time.time()
     print("Reading...")
@@ -311,16 +129,33 @@ def main(args):
     print(t2-t1)
     if args.method != 'gcn':
         print("Saving embeddings...")
-        model.save_embeddings(args.output)
+        #model.save_embeddings(args.output)
+    if args.reconstruction:
+        reconstr(g, model.vectors)
+        return
+
     if args.label_file and args.method != 'gcn':
         vectors = model.vectors
-        X, Y = read_node_label(args.label_file)
-        print("Training classifier using {:.2f}% nodes...".format(
-            args.clf_ratio*100))
-        clf = Classifier(vectors=vectors, clf=LogisticRegression())
-        clf.split_train_evaluate(X, Y, args.clf_ratio)
+        labels = read_node_label(args.label_file)
+        if args.clustering:
+            r = clustering(model.vectors, labels, args)
+            return
+        X = list(labels.keys())
+        Y = list(labels.values())
+        print("Node classification test...")
+        result = {}
+        for ti in range(args.exp_times):
+            clf = Classifier(vectors=vectors, clf=LogisticRegression())
+            myresult = clf.split_train_evaluate(X, Y, args.clf_ratio)
+            for nam in myresult.keys():
+                if ti == 0:
+                    result[nam] = myresult[nam]
+                else:
+                    result[nam] += myresult[nam]
+        for nam in result.keys():
+            print("{}:\t{}".format(nam, result[nam]/args.exp_times))
 
 if __name__ == "__main__":
-    random.seed(32)
-    np.random.seed(32)
+    random.seed()
+    np.random.seed()
     main(parse_args())
