@@ -132,7 +132,7 @@ ValueError: Variable model/embeddings already exists, disallowed. Did you mean t
 
 原因是link prediction的embedding结果不能用在之后的任务中，而做第二次embedding就会在tensorflow中做一些重复设置，导致出错。
 
-其他任务可以同时设置多个，也可以保存embedding结果之后再逐个评测（调参）；顺序是graph reconstruction, modularity, clustering, node classification
+其他任务可以同时设置多个，也可以保存embedding结果之后再逐个评测（调参）；顺序是node classification, clustering, modularity, graph reconstruction
 
 ### 节点分类
 
@@ -154,4 +154,4 @@ ValueError: Variable model/embeddings already exists, disallowed. Did you mean t
 
 以modularity为指标：从min_k到max_k枚举k，做k-means，然后计算modularity值，选最大的一个作为结果
 
-modularity计算：对每个类簇，计算内部节点度数之和degree_sum（有向图考虑入度加出度之和，无向图因为是按双向边存的所以代码中要除以2），记录内部边的数量edge_inside（无向图按双向边来算，所以是实际边数的2倍），计算 $\text{edge_inside}/2m - (\text{degree_sum}/2m)^2​$ （其中m是边数，无向图的边只算1条），对类簇求和，即modularity值。
+modularity计算：对每个类簇，计算内部节点度数之和degree_sum（有向图考虑入度加出度之和，无向图因为是按双向边存的所以代码中要除以2），记录内部边的数量edge_inside（无向图按双向边来算，所以是实际边数的2倍），计算 $\text{edge_inside}/2m - (\text{degree_sum}/2m)^2$ （其中m是边数，无向图的边只算1条），对类簇求和，即modularity值。

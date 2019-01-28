@@ -123,6 +123,8 @@ def parse_args():
                         help='Allow to use cached graph for link prediction task.')
     parser.add_argument('--reconstruction', action='store_true',
                         help='Network reconstruction task.')
+    parser.add_argument('--k-nbrs', default=30, type=int,
+                        help='K for knn in reconstruction')
     parser.add_argument('--clustering', action='store_true',
                         help='Vertex clustering task testing NMI.')
     parser.add_argument('--modularity', action='store_true',

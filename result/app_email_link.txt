@@ -6,25 +6,25 @@ Finding 8032 positive edges of 16064 total edges
 16064 edges for training
 Pre-procesing for non-uniform negative sampling!
 Start training.
-epoch:0 sum of loss:203.318615735
-epoch:1 sum of loss:156.08158502
-epoch:2 sum of loss:144.031938389
-epoch:3 sum of loss:137.634314463
-epoch:4 sum of loss:136.161715403
-epoch:5 sum of loss:135.073296204
-epoch:6 sum of loss:134.593651161
-epoch:7 sum of loss:134.837587655
-epoch:8 sum of loss:134.896284357
-epoch:9 sum of loss:134.418726295
-time: 28.57058835029602
-hadamard -- AUC train: 0.7914 AUC test: 0.7442
-average -- AUC train: 0.7742 AUC test: 0.7736
-l1 -- AUC train: 0.9341 AUC test: 0.874
-l2 -- AUC train: 0.9374 AUC test: 0.8773
-concat -- AUC train: 0.7916 AUC test: 0.7847
+epoch:0 sum of loss:203.176144123
+epoch:1 sum of loss:156.513334468
+epoch:2 sum of loss:143.322993532
+epoch:3 sum of loss:137.827670619
+epoch:4 sum of loss:136.102191821
+epoch:5 sum of loss:135.642508939
+epoch:6 sum of loss:135.182915181
+epoch:7 sum of loss:134.970693275
+epoch:8 sum of loss:134.358310997
+epoch:9 sum of loss:134.458495572
+time: 30.51590061187744
+hadamard -- AUC train: 0.7848 AUC test: 0.73
+average -- AUC train: 0.7715 AUC test: 0.757
+l1 -- AUC train: 0.928 AUC test: 0.8733
+l2 -- AUC train: 0.9315 AUC test: 0.8784
+concat -- AUC train: 0.7903 AUC test: 0.7705
 Edge function test performance (AUC):
-[hadamard] mean: 0.7442 +/- 0
-[average] mean: 0.7736 +/- 0
-[l1] mean: 0.874 +/- 0
-[l2] mean: 0.8773 +/- 0
-[concat] mean: 0.7847 +/- 0
+[hadamard] mean: 0.73 +/- 0
+[average] mean: 0.757 +/- 0
+[l1] mean: 0.8733 +/- 0
+[l2] mean: 0.8784 +/- 0
+[concat] mean: 0.7705 +/- 0

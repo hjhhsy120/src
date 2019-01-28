@@ -131,6 +131,9 @@ class Graph(object):
         for e in edges:
             nbrs[e[0]].add(e[1])
             nbrs[e[1]].add(e[0])
+        for node in self.G.nodes():
+            nbrs[node] = list(nbrs[node])
+            random.shuffle(nbrs[node])
         visited = np.zeros(self.node_size, dtype=np.uint32)
         visited[look_up[st]] = 1
         while cnt > 0:

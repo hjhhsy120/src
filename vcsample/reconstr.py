@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
-
+from sklearn.neighbors import NearestNeighbors
+'''
 def cos_distance(vector_a, vector_b):
     vector_a = np.mat(vector_a)
     vector_b = np.mat(vector_b)
@@ -10,11 +11,10 @@ def cos_distance(vector_a, vector_b):
     sim = 0.5 + 0.5 * cos
     return sim
 
-def reconstr(g, vectors):
+def reconstr(g, vectors, x):
     nodes = list(g.G.nodes())
     tot = 0
     corr = 0
-    cnt = 0
     for root in nodes:
         nbrs = list(g.G.neighbors(root))
         n_nbrs = len(nbrs)
@@ -27,5 +27,29 @@ def reconstr(g, vectors):
             if v in nbrs:
                 corr += 1
         tot += n_nbrs
+    print("Graph reconstruction accuracy: {} ({} / {})".format(corr / tot, corr, tot))
+'''
+def reconstr(g, vectors, k_nbrs):
+    nodes = list(vectors.keys())
+    v = list(vectors.values())
+    n_nodes = len(nodes)
+    # normalize
+    for i in range(n_nodes):
+        v[i] = np.asarray(v[i]) / np.sqrt(sum(np.square(v[i])))
+    neigh = NearestNeighbors(n_neighbors=k_nbrs)
+    print("Computing KNN")
+    neigh.fit(v)
+    tot = 0
+    corr = 0
+    print("Getting neighbors")
+    for i in range(n_nodes):
+        root = nodes[i]
+        nbrs = set(g.G.neighbors(root))
+        n_nbrs = len(nbrs)
+        results = neigh.kneighbors([v[i]], n_nbrs, return_distance=False)
+        for x in results[0]:
+            if nodes[x] in nbrs:
+                corr += 1
+        tot += len(results[0])
     print("Graph reconstruction accuracy: {} ({} / {})".format(corr / tot, corr, tot))
 

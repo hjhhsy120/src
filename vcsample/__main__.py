@@ -64,7 +64,7 @@ def main(args):
 
     if args.reconstruction:
         print("Graph reconstruction")
-        reconstr(g, model.vectors)
+        reconstr(g, model.vectors, args.k_nbrs)
 
 if __name__ == "__main__":
     random.seed()
