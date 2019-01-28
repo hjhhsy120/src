@@ -144,7 +144,7 @@ ValueError: Variable model/embeddings already exists, disallowed. Did you mean t
 
 ### Graph Reconstruction
 
-读图，做embedding；用余弦距离表示两个节点之间有连边的概率，对每个节点计算它和其他节点的余弦距离并排序（复杂度 $n^2\log n$），选最大的k个（k是节点的邻居数），看有多少个是它的邻居；取所有预测中正确的邻居数除以总数作为结果
+读图，做embedding；用余弦距离表示两个节点之间有连边的概率，原先的算法是对每个节点计算它和其他节点的余弦距离并排序（复杂度 $n^2\log n$），选最大的k个（k是节点的邻居数），看有多少个是它的邻居；现在改为用KNN，准确率稍微下降了一些，复杂度降低了很多；取所有预测中正确的邻居数除以总数作为结果。不过，reconstruction结果非常差，原因未知
 
 ### Clustering
 
