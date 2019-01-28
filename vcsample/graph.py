@@ -12,13 +12,14 @@ __email__ = "zhangzhengyan14@mails.tsinghua.edu.cn"
 
 
 class Graph(object):
-    def __init__(self, prop_pos=0.5, prop_neg=0.5):
+    def __init__(self, prop_pos=0.5, prop_neg=0.5, prop_neg_tot=1.0):
         self.G = None
         self.look_up_dict = {}
         self.look_back_list = []
         self.node_size = 0
         self.prop_pos = prop_pos
         self.prop_neg = prop_neg
+        self.prop_neg_tot = prop_neg_tot
 
     def encode_node(self):
         look_up = self.look_up_dict
@@ -57,13 +58,8 @@ class Graph(object):
                 self.G.add_edge(src, dst)
                 self.G[src][dst]['weight'] = float(w)
         else:
-            self.uedges = []
             def read_unweighted(l):
                 src, dst = l.split()
-                if src == dst:
-                    return
-                if not (dst, src) in self.uedges:
-                    self.uedges += [(src, dst)]
                 self.G.add_edge(src, dst)
                 self.G.add_edge(dst, src)
                 self.G[src][dst]['weight'] = 1.0
@@ -71,10 +67,6 @@ class Graph(object):
 
             def read_weighted(l):
                 src, dst, w = l.split()
-                if src == dst:
-                    return
-                if not (dst, src) in self.uedges:
-                    self.uedges += [(src, dst)]
                 self.G.add_edge(src, dst)
                 self.G.add_edge(dst, src)
                 self.G[src][dst]['weight'] = float(w)
@@ -129,6 +121,35 @@ class Graph(object):
             self.G[vec[0]][vec[1]]['label'] = vec[2:]
         fin.close()
 
+    def bfs(self, st, edges):
+        q = {st}
+        cnt = 1
+        nbrs = {}
+        look_up = self.look_up_dict
+        for node in self.G.nodes():
+            nbrs[node] = set()
+        for e in edges:
+            nbrs[e[0]].add(e[1])
+            nbrs[e[1]].add(e[0])
+        visited = np.zeros(self.node_size, dtype=np.uint32)
+        visited[look_up[st]] = 1
+        while cnt > 0:
+            fst = q.pop()
+            cnt -= 1
+            for nxt in nbrs[fst]:
+                x = look_up[nxt]
+                if visited[x] == 0:
+                    if (fst, nxt) in edges:
+                        edges.remove((fst, nxt))
+                    else:
+                        edges.remove((nxt, fst))
+                    if not self.directed:
+                        edges.remove((nxt, fst))
+                    visited[x] = 1
+                    q.add(nxt)
+                    cnt += 1
+
+
     def generate_pos_neg_links(self):
         """
         Select random existing edges in the graph to be postive links,
@@ -138,16 +159,15 @@ class Graph(object):
         """
         random.seed()
         # Select n edges at random (positive samples)
+        look_up = self.look_up_dict
         nodes = list(self.G.nodes())
-        n_nodes = len(nodes)
-        all_edges = list(self.G.edges())
-        if self.directed:
-            edges = all_edges
-        else:
-            edges = self.uedges
+        n_nodes = self.node_size
+        edges = set(self.G.edges())
         n_edges = len(edges)
+        if not self.directed:
+            n_edges = int(n_edges / 2)
         npos = int(self.prop_pos * n_edges)
-        nneg = int(self.prop_neg * n_edges)
+        nneg = int(self.prop_neg_tot * n_edges)
 
         # if not nx.is_connected(self.G):
         #     raise RuntimeError("Input graph is not connected")
@@ -159,13 +179,15 @@ class Graph(object):
         # print("Finding %d of %d non-edges" % (nneg, len(non_edges)))
 
         # Select m pairs of non-edges (negative samples)
+        neg = set()
         neg_edge_list = []
         for i in range(nneg):
             while True:
                 x1 = random.choice(nodes)
                 x2 = random.choice(nodes)
-                if not (x1, x2) in neg_edge_list and not (x2, x1) in neg_edge_list and not (x1, x2) in all_edges:
+                if not (x1, x2) in neg and not (x1, x2) in edges:
                     neg_edge_list += [(x1, x2)]
+                    neg.add((x1, x2))
                     break
 
 
@@ -174,33 +196,27 @@ class Graph(object):
         # Find positive edges, and remove them.
         pos_edge_list = []
         n_count = 0
-        n_ignored_count = 0
+
+        st = random.choice(nodes)
+        self.bfs(st, edges)
+
+        edges = list(edges)
         random.shuffle(edges)
         for edge in edges:
+            if self.directed or look_up[edge[0]] < look_up[edge[1]]:
 
-            # Remove edge from graph
-            data = self.G[edge[0]][edge[1]]
-            self.G.remove_edge(*edge)
-            if not self.directed:
-                data_r = self.G[edge[1]][edge[0]]
-                self.G.remove_edge(edge[1], edge[0])
-
-            # Check if graph is still connected
-            #TODO: We shouldn't be using a private function for bfs
-            reachable_from_v1 = nx.connected._plain_bfs(self.G, edge[0])
-            if edge[1] not in reachable_from_v1:
-                self.G.add_edge(*edge, **data)
+                # Remove edge from graph
+                self.G.remove_edge(*edge)
                 if not self.directed:
-                    self.G.add_edge(edge[1], edge[0], **data_r)
-                n_ignored_count += 1
-            else:
+                    self.G.remove_edge(edge[1], edge[0])
+
                 pos_edge_list.append(edge)
                 # print("Found: %d    " % (n_count), end="\r")
                 n_count += 1
 
-            # Exit if we've found npos nodes or we have gone through the whole list
-            if n_count >= npos:
-                break
+                # Exit if we've found npos nodes or we have gone through the whole list
+                if n_count >= npos:
+                    break
 
         if len(pos_edge_list) < npos:
             raise RuntimeWarning("Only %d positive edges found." % (n_count))
@@ -208,8 +224,28 @@ class Graph(object):
         self._pos_edge_list = pos_edge_list
         self._neg_edge_list = neg_edge_list
 
-    def get_selected_edges(self):
-        edges = self._pos_edge_list + self._neg_edge_list
-        labels = np.zeros(len(edges))
+    def get_test_edges(self):
+        nneg = len(self._neg_edge_list)
+        edges = self._pos_edge_list + self._neg_edge_list[:int(self.prop_neg * nneg)]
+        tot = len(edges)
+        labels = np.zeros(tot)
         labels[:len(self._pos_edge_list)] = 1
+        print('{} edges for test'.format(tot))
+        return edges, labels
+
+    def get_train_edges(self):
+        if not self.directed:
+            remaining_edges = []
+            look_up = self.look_up_dict
+            for edge in self.G.edges():
+                if look_up[edge[0]] < look_up[edge[1]]:
+                    remaining_edges += [edge]
+        else:
+            remaining_edges = list(self.G.edges())
+        nneg = len(self._neg_edge_list)
+        edges = remaining_edges + self._neg_edge_list[int(self.prop_neg * nneg):]
+        tot = len(edges)
+        labels = np.zeros(tot)
+        labels[:len(remaining_edges)] = 1
+        print('{} edges for training'.format(tot))
         return edges, labels

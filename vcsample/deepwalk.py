@@ -52,15 +52,16 @@ def alias_draw(J, q):
 
 class deepwalk(object):
     # fac*node_size is the size of v_sampling table (for each epoch)
-    def __init__(self, graph, window=10, walk_length=10, fac=100):
+    def __init__(self, graph, max_iter=10, delta=0.01, fac=100, window=10):
         self.g = graph
         if graph.directed:
             self.g_r = None
         else:
             self.g_r = graph
         self.window = window
-        self.walk_length = walk_length
+        self.max_iter = max_iter
         self.fac = fac
+        self.delta = delta
         self.sampling_table = None
         self.v = None
         self.alias_nodes = None
@@ -69,7 +70,7 @@ class deepwalk(object):
 
     def sample_v(self, batch_size):
         if self.sampling_table is None:
-            self.page_rank(0.01)
+            self.page_rank(self.delta)
         sampling_table = self.sampling_table
         random.shuffle(sampling_table)
         i = 0
@@ -80,7 +81,7 @@ class deepwalk(object):
 
     def gen_alias(self):
         if self.v is None:
-            self.page_rank(0.01)
+            self.page_rank(self.delta)
         v = self.v
         G = self.g.G
         degree = self.degree
@@ -163,7 +164,6 @@ class deepwalk(object):
                 i += 1
         return t
 
-
     '''
     def sample_c(self, h):
         try:
@@ -210,8 +210,6 @@ class deepwalk(object):
         look_up = self.g.look_up_dict
         look_back = self.g.look_back_list
         node_size = self.g.G.number_of_nodes()
-        table_size = node_size * self.fac
-        self.table_size = table_size
         nbrs = {}
         degree = {}
         v = np.zeros(node_size)
@@ -225,7 +223,7 @@ class deepwalk(object):
         self.degree = degree
         for i in nodes:
             v[look_up[i]] = 1 / cnt
-        it = self.walk_length
+        it = self.max_iter
         while True:
             if it == 0:
                 break
@@ -241,6 +239,9 @@ class deepwalk(object):
         self.v = v
         p = 0.0
         i = 0
+
+        table_size = node_size * self.fac
+        self.table_size = table_size
         self.sampling_table = np.zeros(table_size, dtype=np.uint32)
         for j in range(node_size):
             p += v[j]

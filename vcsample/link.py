@@ -12,9 +12,7 @@ from sklearn.preprocessing import StandardScaler
 import os
 # import tensorflow as tf
 
-from . import app
-from . import vctrainer
-from . import deepwalk
+from .getmodel import getmodels
 
 edge_functions = {
     "hadamard": lambda a, b: a * b,
@@ -35,12 +33,10 @@ def create_train_test_graphs(args):
         Gtrain, Gtest: Train & test graphs
     """
     # Remove half the edges, and the same number of "negative" edges
-    prop_pos = args.prop_pos
-    prop_neg = args.prop_neg
 
     # Create random training and test graphs with different random edge selections
     cached_fn = "%s.graph" % (os.path.basename(args.input))
-    if os.path.exists(cached_fn):
+    if os.path.exists(cached_fn) and args.allow_cached:
         print("Loading link prediction graphs from %s" % cached_fn)
         with open(cached_fn, 'rb') as f:
             cache_data = pickle.load(f)
@@ -48,8 +44,9 @@ def create_train_test_graphs(args):
     else:
         print("Regenerating link prediction graphs")
         # Train graph embeddings on graph with random links
-        Gtrain = Graph(prop_pos=prop_pos,
-                          prop_neg=prop_neg)
+        Gtrain = Graph(prop_pos=args.prop_pos,
+                          prop_neg=args.prop_neg,
+                          prop_neg_tot=args.prop_neg_tot)
         if args.graph_format == 'adjlist':
             Gtrain.read_adjlist(filename=args.input)
         elif args.graph_format == 'edgelist':
@@ -80,7 +77,7 @@ def edges_to_features(vectors, edge_list, edge_function, dimensions):
         feature_vec[ii] = edge_function(emb1, emb2)
 
     return feature_vec
-
+'''
 def batch_iter(vectors, edges, labels, batch_size):
     tot = len(labels)
     idx = np.random.permutation(tot)
@@ -110,7 +107,7 @@ def full_batch(vectors, edges, labels):
         v2s += [vectors[edges[idx[i]][1]]]
         ls += [labels[idx[i]]]
     return v1s, v2s, ls
-
+'''
 def test_edge_functions(args):
     dims = args.representation_size
     t1 = time.time()
@@ -118,8 +115,8 @@ def test_edge_functions(args):
     Gtrain = create_train_test_graphs(args)
 
     # Train and test graphs, with different edges
-    edges_all, labels_all = Gtrain.get_selected_edges()
-    # edges_test, labels_test = Gtest.get_selected_edges()
+    edges_test, labels_test = Gtrain.get_test_edges()
+    edges_train, labels_train = Gtrain.get_train_edges()
 
     # With fixed test & train graphs (these are expensive to generate)
     # we perform k iterations of the algorithm
@@ -127,16 +124,11 @@ def test_edge_functions(args):
     aucs = {name: [] for name in edge_functions}
 
     # Learn embeddings with current parameter values
-    if args.method == 'deepWalk':
-        model = deepwalk.deepwalk(graph=Gtrain, window=args.window_size)
-    elif args.method == 'app':
-        model = app.APP(graph=Gtrain)
-    trainer = vctrainer.vctrainer(Gtrain, model, model, rep_size=dims, epoch=args.epochs,
-                                    batch_size=1000, learning_rate=args.lr, negative_ratio=args.negative_ratio,
-                                    ngmode=1, label_file=None, clf_ratio=args.clf_ratio, auto_save=True)
+    model = getmodels(Gtrain, args)
+
     t2 = time.time()
     print("time: {}".format(t2-t1))
-    vectors = trainer.vectors
+    vectors = model.vectors
     '''
     # tensorflow for (v1)^t W v2
     cur_seed = random.getrandbits(32)
@@ -180,28 +172,22 @@ def test_edge_functions(args):
         dim2 = dims
         if edge_fn_name == 'concat':
             dim2 = dims * 2
-        edge_features_all = edges_to_features(vectors, edges_all, edge_fn, dim2)
-        partitioner = model_selection.StratifiedKFold(args.exp_times, shuffle=True)
-        ti = 0
-        for train_inx, test_inx in partitioner.split(edges_all, labels_all):
-            edge_features_train = [edge_features_all[j] for j in train_inx]
-            labels_train = [labels_all[j] for j in train_inx]
-            edge_features_test = [edge_features_all[j] for j in test_inx]
-            labels_test = [labels_all[j] for j in test_inx]
-            # Linear classifier
-            scaler = StandardScaler()
-            lin_clf = LogisticRegression(C=1)
-            clf = pipeline.make_pipeline(scaler, lin_clf)
+        edge_features_train = edges_to_features(vectors, edges_train, edge_fn, dim2)
+        edge_features_test = edges_to_features(vectors, edges_test, edge_fn, dim2)
 
-            # Train classifier
-            clf.fit(edge_features_train, labels_train)
-            auc_train = metrics.scorer.roc_auc_scorer(clf, edge_features_train, labels_train)
-            auc_test = metrics.scorer.roc_auc_scorer(clf, edge_features_test, labels_test)
+        # Linear classifier
+        scaler = StandardScaler()
+        lin_clf = LogisticRegression(C=1)
+        clf = pipeline.make_pipeline(scaler, lin_clf)
 
-            ti += 1
-            print("%s Experiment # %d; AUC train: %.4g AUC test: %.4g"
-                  % (edge_fn_name, ti, auc_train, auc_test))
-            aucs[edge_fn_name].append(auc_test)
+        # Train classifier
+        clf.fit(edge_features_train, labels_train)
+        auc_train = metrics.scorer.roc_auc_scorer(clf, edge_features_train, labels_train)
+        auc_test = metrics.scorer.roc_auc_scorer(clf, edge_features_test, labels_test)
+
+        print("%s -- AUC train: %.4g AUC test: %.4g"
+              % (edge_fn_name, auc_train, auc_test))
+        aucs[edge_fn_name].append(auc_test)
 
     print("Edge function test performance (AUC):")
     for edge_name in aucs:

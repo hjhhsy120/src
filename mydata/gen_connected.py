@@ -1,5 +1,5 @@
 
-data_name = 'cora'
+data_name = 'email'
 ot = open(data_name + '_con_edge.txt', 'w')
 otl = open(data_name + '_con_label.txt', 'w')
 f = open(data_name + '_edge.txt', 'r')
@@ -47,11 +47,13 @@ for i in d.keys():
     if t > j:
         j = t
         k = i
-
+s = set()
 for l in ls:
     ids = l.strip().split(' ')
-    if ids[0] in d[k] and ids[1] in d[k]:
-        ot.writelines([l])
+    if ids[0] != ids[1] and ids[0] in d[k] and ids[1] in d[k]:
+        if not (ids[0], ids[1]) in s:
+            s.add((ids[0], ids[1]))
+            ot.writelines([l])
 ot.close()
 
 for l in fl.readlines():

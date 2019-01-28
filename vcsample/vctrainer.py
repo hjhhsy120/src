@@ -9,7 +9,7 @@ from .classify import Classifier, read_node_label
 class vctrainer(object):
     # ngmode=0: uniform; ngmode=1: power 0.75
     def __init__(self, graph, model_v, model_c, rep_size=128, epoch = 10, batch_size=1000, learning_rate=0.001,
-                negative_ratio=5, ngmode = 0, label_file=None, clf_ratio=0.5, auto_save=True):
+                negative_ratio=5, ngmode = 0, ng_pw = 0.75):
         self.cur_epoch = 0
         self.g = graph
         self.model_v = model_v
@@ -21,7 +21,7 @@ class vctrainer(object):
         self.negative_ratio = negative_ratio
         self.ngmode = ngmode
         if negative_ratio > 0 and ngmode == 1:
-            self.gen_negative(table_size=1e6)
+            self.gen_negative(table_size=1e6, power=ng_pw)
         self.sess = tf.Session()
         cur_seed = random.getrandbits(32)
         initializer = tf.contrib.layers.xavier_initializer(
@@ -32,23 +32,7 @@ class vctrainer(object):
         print("Start training.")
         for i in range(epoch):
             self.train_one_epoch()
-            if label_file:
-                self.get_embeddings()
-                X, Y = read_node_label(label_file)
-                print("Training classifier using {:.2f}% nodes...".format(
-                    clf_ratio*100))
-                clf = Classifier(vectors=self.vectors,
-                                 clf=LogisticRegression())
-                result = clf.split_train_evaluate(X, Y, clf_ratio)
-
-                if result['macro'] > self.best_result:
-                    self.best_result = result['macro']
-                    if auto_save:
-                        self.best_vector = self.vectors
-
         self.get_embeddings()
-        if auto_save and label_file:
-            self.vectors = self.best_vector
 
     def get_embeddings(self):
         vectors = {}
