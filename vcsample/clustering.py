@@ -40,7 +40,10 @@ def modularity(g, vectors, min_k, max_k):
             c = community[edge[0]]
             if c == community[edge[1]]:
                 edge_inside[c] += 1
-        if not g.directed:
+        if g.directed:
+            for c in community_set:
+                edge_inside[c] *= 2
+        else:
             m /= 2
         result = 0.0
         for c in community_set:
@@ -51,6 +54,7 @@ def modularity(g, vectors, min_k, max_k):
         print("K = {}; modularity = {}".format(K, result))
     print("best K: {}".format(best_k))
     print("best modularity: {}".format(best_m))
+    print("{}\t{}\n".format(best_k, best_m))
 
 def clustering(vectors, labels, exp_times):
     nodes = list(vectors.keys())
@@ -73,4 +77,4 @@ def clustering(vectors, labels, exp_times):
         nmi = normalized_mutual_info_score(y_, pred)
         print ('# {} NMI: {}'.format(i+1, nmi))
         a_nmi += nmi
-    print("Average NMI: {}".format(a_nmi / exp_times))
+    print("Average NMI: {}\n".format(a_nmi / exp_times))

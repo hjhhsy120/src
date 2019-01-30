@@ -36,27 +36,6 @@ def main(args):
             model.save_embeddings(args.output)
     else:
         model = emptymodel(load_embeddings(args.embedding_file))
-    if args.label_file:
-        vectors = model.vectors
-        labels = read_node_label(args.label_file)
-        if args.classification:
-            X = list(labels.keys())
-            Y = list(labels.values())
-            print("Node classification")
-            result = {}
-            for ti in range(args.exp_times):
-                clf = Classifier(vectors=vectors, clf=LogisticRegression())
-                myresult = clf.split_train_evaluate(X, Y, args.clf_ratio)
-                for nam in myresult.keys():
-                    if ti == 0:
-                        result[nam] = myresult[nam]
-                    else:
-                        result[nam] += myresult[nam]
-            for nam in result.keys():
-                print("{}:\t{}".format(nam, result[nam]/args.exp_times))
-        if args.clustering:
-            print("Clustering")
-            clustering(model.vectors, labels, args.exp_times)
 
     if args.modularity:
         print("Modularity")
@@ -65,6 +44,44 @@ def main(args):
     if args.reconstruction:
         print("Graph reconstruction")
         reconstr(g, model.vectors, args.k_nbrs)
+
+    if args.label_file:
+        vectors = model.vectors
+        labels = read_node_label(args.label_file)
+        if args.clustering:
+            print("Clustering")
+            clustering(model.vectors, labels, args.exp_times)
+
+        if args.classification:
+            X = list(labels.keys())
+            Y = list(labels.values())
+            print("Node classification")
+            clf_ratio_list = args.clf_ratio.strip().split(',')
+            result_list = []
+            for clf_ratio in clf_ratio_list:
+                result = {}
+                for ti in range(args.exp_times):
+                    clf = Classifier(vectors=vectors, clf=LogisticRegression())
+                    myresult = clf.split_train_evaluate(X, Y, float(clf_ratio))
+                    for nam in myresult.keys():
+                        if ti == 0:
+                            result[nam] = myresult[nam]
+                        else:
+                            result[nam] += myresult[nam]
+                for nam in result.keys():
+                    print("clf_ratio = {}, {}: {}".format(clf_ratio, nam, result[nam]/args.exp_times))
+                result_list += [result]
+            exp_num = len(result_list)
+            for i in range(exp_num):
+                print("{}\t".format(clf_ratio_list[i]), end='')
+            print("\nmicro")
+            for i in range(exp_num):
+                print("{}\t".format(result_list[i]["micro"]/args.exp_times), end='')
+            print("\nmacro")
+            for i in range(exp_num):
+                print("{}\t".format(result_list[i]["macro"]/args.exp_times), end='')
+            print("\n")
+
 
 if __name__ == "__main__":
     random.seed()

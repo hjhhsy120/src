@@ -11,18 +11,16 @@ class APP(object):
         self.jump_factor = jump_factor
         self.sample = sample
         self.step = step
+        self.neighbors = None
+        self.degrees = None
 
     def sample_v(self, batch_size):
         random.seed()
         try:
             nodes = self.nodes
         except:
-            nodes = []
-            for root in self.g.G.nodes():
-                nbrs = list(self.g.G.neighbors(root))
-                if len(nbrs) > 0:
-                    nodes += [root]
-            self.nodes = nodes
+            self.nodes = list(self.g.G.nodes())
+            nodes = self.nodes
         look_up = self.g.look_up_dict
         random.shuffle(nodes)
         h = []
@@ -35,31 +33,39 @@ class APP(object):
                     yield h
                     cnt = 0
                     h = []
+        if len(h) > 0:
+            yield h
 
     def sample_c(self, h):
+        G = self.g.G
+        if self.neighbors is None:
+            self.neighbors = {}
+            self.degrees = {}
+            for root in G.nodes():
+                self.neighbors[root] = list(G.neighbors(root))
+                self.degrees[root] = len(self.neighbors[root])
+        neighbors = self.neighbors
+        degrees = self.degrees
         jump_factor = self.jump_factor
         step = self.step
-        G = self.g.G
         look_up = self.g.look_up_dict
         look_back = self.g.look_back_list
         t = []
         for i in h:
             root = look_back[i]
-            cur_nbrs = list(G.neighbors(root))
-            s = step - 1
-            iid = random.choice(cur_nbrs)
+            iid = root
+            s = step
             while s > 0:
                 s -= 1
                 jump = random.random()
                 if jump < jump_factor:
                     break
-                cur_nbrs = list(G.neighbors(iid))
-                if len(cur_nbrs) == 0:
+                if degrees[iid] == 0:
                     break
-                iid = random.choice(cur_nbrs)
+                iid = random.choice(neighbors[iid])
             t += [look_up[iid]]
         return t
-
+    '''
     def batch_iter(self):
         random.seed()
         jump_factor = self.jump_factor
@@ -67,14 +73,23 @@ class APP(object):
         step = self.step
         batch_size = self.batch_size
         G = self.g.G
+        if self.neighbors is None:
+            self.neighbors = {}
+            for root in G.nodes():
+                self.neighbors[root] = list(G.neighbors(root))
+        neighbors = self.neighbors
         look_up = self.g.look_up_dict
-        nodes = list(G.nodes())
+        try:
+            nodes = self.nodes
+        except:
+            self.nodes = list(self.g.G.nodes())
+            nodes = self.nodes
         random.shuffle(nodes)
         cnt = 0
         h = []
         t = []
         for root in nodes:
-            cur_nbrs = list(G.neighbors(root))
+            cur_nbrs = neighbors[root]
             if len(cur_nbrs) == 0:
                 continue
             for i in range(sample):
@@ -86,7 +101,7 @@ class APP(object):
                     if jump < jump_factor:
                         break
                     iid = random.choice(cur_nbrs)
-                    cur_nbrs = list(G.neighbors(iid))
+                    cur_nbrs = neighbors[iid]
                     if len(cur_nbrs) == 0:
                         break
                 if iid != -1:
@@ -98,6 +113,7 @@ class APP(object):
                         cnt = 0
                         h = []
                         t = []
-                cur_nbrs = list(G.neighbors(root))
+                cur_nbrs = neighbors[root]
         if cnt > 0:
             yield h, t, [1]
+    '''

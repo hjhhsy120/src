@@ -35,13 +35,16 @@ def create_train_test_graphs(args):
     # Remove half the edges, and the same number of "negative" edges
 
     # Create random training and test graphs with different random edge selections
-    cached_fn = "%s.graph" % (os.path.basename(args.input))
-    if os.path.exists(cached_fn) and args.allow_cached:
-        print("Loading link prediction graphs from %s" % cached_fn)
-        with open(cached_fn, 'rb') as f:
-            cache_data = pickle.load(f)
-        Gtrain = cache_data['g_train']
-    else:
+
+    Gtrain = None
+    cached_fn = args.cached_fn
+    if cached_fn != '':
+        if os.path.exists(cached_fn):
+            print("Loading link prediction graphs from %s" % cached_fn)
+            with open(cached_fn, 'rb') as f:
+                cache_data = pickle.load(f)
+            Gtrain = cache_data['g_train']
+    if Gtrain is None:
         print("Regenerating link prediction graphs")
         # Train graph embeddings on graph with random links
         Gtrain = Graph(prop_pos=args.prop_pos,
@@ -55,9 +58,10 @@ def create_train_test_graphs(args):
         Gtrain.generate_pos_neg_links()
 
         # Cache generated  graph
-        cache_data = {'g_train': Gtrain}
-        with open(cached_fn, 'wb') as f:
-            pickle.dump(cache_data, f)
+        if cached_fn != '':
+            cache_data = {'g_train': Gtrain}
+            with open(cached_fn, 'wb') as f:
+                pickle.dump(cache_data, f)
 
     return Gtrain
 
@@ -194,6 +198,10 @@ def test_edge_functions(args):
         auc_mean = np.mean(aucs[edge_name])
         auc_std = np.std(aucs[edge_name])
         print("[%s] mean: %.4g +/- %.3g" % (edge_name, auc_mean, auc_std))
+
+    for edge_name in aucs:
+        auc_mean = np.mean(aucs[edge_name])
+        print("%.4g\t" % (auc_mean), end='')
 
     return aucs
 

@@ -46,10 +46,12 @@ def reconstr(g, vectors, k_nbrs):
         root = nodes[i]
         nbrs = set(g.G.neighbors(root))
         n_nbrs = len(nbrs)
-        results = neigh.kneighbors([v[i]], n_nbrs, return_distance=False)
-        for x in results[0]:
-            if nodes[x] in nbrs:
-                corr += 1
-        tot += len(results[0])
+        if n_nbrs > 0:
+            results = neigh.kneighbors([v[i]], n_nbrs, return_distance=False)
+            for x in results[0]:
+                if nodes[x] in nbrs:
+                    corr += 1
+            tot += n_nbrs
     print("Graph reconstruction accuracy: {} ({} / {})".format(corr / tot, corr, tot))
+    print("{}\n".format(corr/tot))
 

@@ -6,25 +6,35 @@ Finding 8032 positive edges of 16064 total edges
 16064 edges for training
 Pre-procesing for non-uniform negative sampling!
 Start training.
-epoch:0 sum of loss:203.176144123
-epoch:1 sum of loss:156.513334468
-epoch:2 sum of loss:143.322993532
-epoch:3 sum of loss:137.827670619
-epoch:4 sum of loss:136.102191821
-epoch:5 sum of loss:135.642508939
-epoch:6 sum of loss:135.182915181
-epoch:7 sum of loss:134.970693275
-epoch:8 sum of loss:134.358310997
-epoch:9 sum of loss:134.458495572
-time: 30.51590061187744
-hadamard -- AUC train: 0.7848 AUC test: 0.73
-average -- AUC train: 0.7715 AUC test: 0.757
-l1 -- AUC train: 0.928 AUC test: 0.8733
-l2 -- AUC train: 0.9315 AUC test: 0.8784
-concat -- AUC train: 0.7903 AUC test: 0.7705
+epoch:0 sum of loss:205.559715301
+epoch:1 sum of loss:159.373035952
+epoch:2 sum of loss:135.903353855
+epoch:3 sum of loss:128.652950063
+epoch:4 sum of loss:126.942717522
+epoch:5 sum of loss:126.388795882
+epoch:6 sum of loss:126.569685414
+epoch:7 sum of loss:126.492273107
+epoch:8 sum of loss:125.830093443
+epoch:9 sum of loss:125.797451481
+epoch:10 sum of loss:125.744418249
+epoch:11 sum of loss:126.19923526
+epoch:12 sum of loss:125.350876063
+epoch:13 sum of loss:125.998310566
+epoch:14 sum of loss:125.307244688
+epoch:15 sum of loss:125.167340383
+epoch:16 sum of loss:125.919531673
+epoch:17 sum of loss:126.160392061
+epoch:18 sum of loss:125.638087526
+epoch:19 sum of loss:125.79624477
+time: 56.64814853668213
+hadamard -- AUC train: 0.8133 AUC test: 0.6852
+average -- AUC train: 0.7467 AUC test: 0.7479
+l1 -- AUC train: 0.9258 AUC test: 0.8115
+l2 -- AUC train: 0.9331 AUC test: 0.8186
+concat -- AUC train: 0.7673 AUC test: 0.7614
 Edge function test performance (AUC):
-[hadamard] mean: 0.73 +/- 0
-[average] mean: 0.757 +/- 0
-[l1] mean: 0.8733 +/- 0
-[l2] mean: 0.8784 +/- 0
-[concat] mean: 0.7705 +/- 0
+[hadamard] mean: 0.6852 +/- 0
+[average] mean: 0.7479 +/- 0
+[l1] mean: 0.8115 +/- 0
+[l2] mean: 0.8186 +/- 0
+[concat] mean: 0.7614 +/- 0

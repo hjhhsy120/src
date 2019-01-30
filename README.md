@@ -1,11 +1,22 @@
 # src
 
-### 热力图
-热力图：第i行第j列的色块对应vertex i和context j的出现次数，次数过大的做了最大值限制。i和j的数值是相应节点的度数从小到大的排名（相当于将节点按度数从小到大排了序），超过5000个点则把所有点排名乘5000除以点数取整，以保证复杂度不会过大。现有email, cora, blogcatalog在deepwalk, lpwalk, app上的结果，node2vec做了email上grid search 0.25, 1.0, 4.0，在mypic文件夹下。
-
-相关代码：nesample/trainer在得到所有sample之后按每行“v c weight”格式输出到aaa.txt然后退出；pic.py读取sample信息和度数排序、绘制热力图；zrun_nesampler.bat是它的批处理文件。
-
 ### vc-sampling
+
+#### 固定参数：
+
+embedding维度128，训练epoch数20，一个epoch包含节点数是总数的50倍，batch size=1000，学习率0.01，负例是正例的5倍
+
+#### 模型调参
+
+APP：停止概率 0.1, 0.15, 0.2, 0.25, 0.3（最大步数 80 固定）
+
+#### 评测可变参数
+
+节点分类：训练集占比 0.1, 0.2, ..., 0.9
+
+链接预测：删除的边占比 0.1, 0.3, 0.5, 0.7, 0.9
+
+modularity：k-means的k值 2到30
 
 #### 详见vcsample文件夹下的readme
 
@@ -18,6 +29,12 @@ sample_v是采样“中心点”的generator，生成一个epoch的各个batch�
 对app而言，sample_v就是随机打乱节点顺序，然后每个节点依次取sample个，取满batch_size就yield，直到取完；sample_c就是遍历输入的序列，对每个中心点，从它出发以一定概率停止地走不超过10步，输出停止的节点lookup的标号。在email和cora上的结果不如原来的deepwalk，比原来的LINE好
 
 关于deepwalk，我现在想先用pagerank计算平稳分布，再建立一个固定大小的列表（点数的fac倍大小），使得节点在列表的出现次数和pagerank值成正比，在sample_v中对列表做一遍random shuffle，然后依次取；采样context的时候，我想从中心点随机游走window步，将路径上的点都加入context。（实际操作的时候，记录了每个中心点对应的已走步数和当前位置，这样可以不受batch“隔断”的影响）。不过在email上的运行结果比LINE差，在Cora上的结果比APP稍差、比LINE好，不知道是不是哪里有问题。。
+
+### 热力图
+
+热力图：第i行第j列的色块对应vertex i和context j的出现次数，次数过大的做了最大值限制。i和j的数值是相应节点的度数从小到大的排名（相当于将节点按度数从小到大排了序），超过5000个点则把所有点排名乘5000除以点数取整，以保证复杂度不会过大。现有email, cora, blogcatalog在deepwalk, lpwalk, app上的结果，node2vec做了email上grid search 0.25, 1.0, 4.0，在mypic文件夹下。
+
+相关代码：nesample/trainer在得到所有sample之后按每行“v c weight”格式输出到aaa.txt然后退出；pic.py读取sample信息和度数排序、绘制热力图；zrun_nesampler.bat是它的批处理文件。
 
 ### Changes to OpenNE
 增加了MH-Walk

@@ -22,7 +22,9 @@
 
 --representation-size embedding的维度；默认128
 
---epochs 训练epoch数，默认10
+--epochs 训练epoch数，默认20
+
+--epoch-fac 一个epoch包含的节点数除以节点总数的值，默认50
 
 --batch-size 默认1000
 
@@ -44,17 +46,13 @@
 
 --app-jump-factor 停止的概率；默认0.15
 
---app-sample 在一个epoch中，从每个节点出发的次数；默认50
-
---app-step 随机游走的最大步数
+--app-step 随机游走的最大步数；默认80
 
 #### deepwalk
 
 --delta 对应pagerank算法中停止运算的条件 sum(abs(v - v2)) <= delta；默认0.01
 
 --max-iter 对应pagerank算法的最大迭代次数；默认10
-
---walk-fac 一个epoch的正例个数与节点数的比值；默认100
 
 --window-size 采样context时，对应的窗格大小
 
@@ -66,7 +64,7 @@
 
 --classification 是否为节点分类任务（仅当有标签时）
 
---clf-ratio 训练数据占节点总数的比例；默认0.5
+--clf-ratio 列表形式，每项是训练数据占节点总数的比例，用逗号分隔（不带空格）；默认0.5
 
 #### Link Prediction
 
@@ -78,11 +76,13 @@
 
 --prop-neg-tot 采样的负边总数和原图边数的比例，这些边将根据prop_neg划分为训练、测试两部分；默认1.0
 
---allow-cached 是否允许使用上次保存的图（删除了一部分边，选定了正负例）
+--cached-fn 保存的图的名称，不写则不保存也不使用保存的图
 
 #### Graph Reconstruction
 
 --reconstruction 是否为graph reconstruction任务
+
+--k-nbrs knn的k，默认30
 
 #### Vertex Clustering
 
@@ -92,7 +92,7 @@
 
 --min-k modularity任务枚举的最小k，默认2
 
---max-k modularity任务枚举的最大k，默认50
+--max-k modularity任务枚举的最大k，默认30
 
 ## 文件说明
 
