@@ -32,10 +32,6 @@
 
 --negative-ratio 负采样数和正样例数的比值n。因为是按“一个正样例batch+n个负样例batch”轮流训练的，所以必须是非负整数；默认5
 
---ngmode 负采样模式0或1。负采样的vertex是和同一组的正采样vertex一样的，区别在于context：0表示context均匀采样，1表示以degree的ng_pw次方为权重采样。这里的degree考虑了边权，而其他有关degree的地方目前都没有考虑边权；默认1
-
---ng-pw 见上条；默认0.75
-
 ### 算法相关
 
 --model-v 指定vertex采样方式，不可缺省
@@ -50,11 +46,7 @@
 
 #### deepwalk
 
---delta 对应pagerank算法中停止运算的条件 sum(abs(v - v2)) <= delta；默认0.01
-
---max-iter 对应pagerank算法的最大迭代次数；默认10
-
---window-size 采样context时，对应的窗格大小
+--window-size 采样context时，对应的窗格大小，默认10
 
 ### Evaluation相关
 

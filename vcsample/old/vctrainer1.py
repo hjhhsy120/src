@@ -7,8 +7,9 @@ from sklearn.linear_model import LogisticRegression
 from .classify import Classifier, read_node_label
 
 class vctrainer(object):
+    # ngmode=0: uniform; ngmode=1: power 0.75
     def __init__(self, graph, model_v, model_c, rep_size=128, epoch = 10, batch_size=1000, learning_rate=0.001,
-                negative_ratio=5):
+                negative_ratio=5, ngmode = 0, ng_pw = 0.75):
         self.cur_epoch = 0
         self.g = graph
         self.model_v = model_v
@@ -18,6 +19,9 @@ class vctrainer(object):
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.negative_ratio = negative_ratio
+        self.ngmode = ngmode
+        if negative_ratio > 0 and ngmode == 1:
+            self.gen_negative(table_size=1e6, power=ng_pw)
         self.sess = tf.Session()
         cur_seed = random.getrandbits(32)
         initializer = tf.contrib.layers.xavier_initializer(
@@ -85,10 +89,39 @@ class vctrainer(object):
         print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
         self.cur_epoch += 1
 
+    def gen_negative(self, table_size=1e8, power=0.75):
+        # table for negative sampling
+        self.table_size = table_size
+        numNodes = self.node_size
+
+        print("Pre-procesing for non-uniform negative sampling!")
+        node_degree = np.zeros(numNodes)
+
+        look_up = self.g.look_up_dict
+        for edge in self.g.G.edges():
+            node_degree[look_up[edge[0]]
+                        ] += self.g.G[edge[0]][edge[1]]["weight"]
+
+        norm = sum([math.pow(node_degree[i], power) for i in range(numNodes)])
+
+        self.sampling_table = np.zeros(int(table_size), dtype=np.uint32)
+
+        p = 0
+        i = 0
+        for j in range(numNodes):
+            p += float(math.pow(node_degree[j], power)) / norm
+            while i < table_size and float(i) / table_size < p:
+                self.sampling_table[i] = j
+                i += 1
+
     def neg_batch(self, h):
         t = []
         for i in range(len(h)):
-            t.append(random.randint(0, self.node_size-1))
+            if self.ngmode == 1:
+                t.append(
+                    self.sampling_table[random.randint(0, self.table_size-1)])
+            else:
+                t.append(random.randint(0, numNodes-1))
         return t
 
     def save_embeddings(self, filename):

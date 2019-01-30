@@ -45,10 +45,6 @@ def parse_args():
                         help='learning rate')
     parser.add_argument('--negative-ratio', default=5, type=int,
                         help='the negative ratio of embedding training')
-    parser.add_argument('--ngmode', default=1, choices=[0, 1],
-                        help='mode of negative sampling: 0 uniform, 1 power(ng_pw)')
-    parser.add_argument('--ng-pw', default=0.75, type=float,
-                        help='power for negative sampling')
 
     # algorithm parameters
     parser.add_argument('--model-v', required=True,
@@ -63,14 +59,6 @@ def parse_args():
                         help='Maximum number of walking steps(APP)')
 
     # deepwalk
-    parser.add_argument('--delta', default=0.01, type=int,
-                        help='delta for page rank.')
-    parser.add_argument('--max-iter', default=10, type=int,
-                        help="NOTICE: maximum iteration number for page rank")
-    # parser.add_argument('--number-walks', default=10, type=int,
-    #                    help='Number of random walks to start at each node')
-    # parser.add_argument('--workers', default=8, type=int,
-    #                    help='Number of parallel processes.')
     parser.add_argument('--window-size', default=10, type=int,
                         help='Window size of skipgram model.')
 
@@ -141,8 +129,7 @@ def parse_args():
 
 def getmodel(model, g, args):
     if model == 'deepwalk':
-        return deepwalk.deepwalk(graph=g, delta=args.delta, max_iter=args.max_iter,
-                                    fac=args.epoch_fac, window=args.window_size)
+        return deepwalk.deepwalk(graph=g, fac=args.epoch_fac, window=args.window_size)
     if model == 'app':
         return app.APP(graph=g, jump_factor=args.app_jump_factor, sample=args.epoch_fac, step=args.app_step)
 
@@ -165,6 +152,5 @@ def getmodels(g, args):
 
     trainer = vctrainer.vctrainer(g, model_v, model_c, rep_size=args.representation_size,
                                         epoch=args.epochs, batch_size=args.batch_size,
-                                        learning_rate=args.lr, negative_ratio=args.negative_ratio,
-                                        ngmode=args.ngmode, ng_pw = args.ng_pw)
+                                        learning_rate=args.lr, negative_ratio=args.negative_ratio)
     return trainer
