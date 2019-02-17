@@ -27,4 +27,4 @@ for l in f.readlines():
 print (tt)
 plt.matshow(arr, cmap='hot')
 plt.colorbar()
-plt.savefig('mypic/' + sys.argv[2] + '_' + sys.argv[3] + '.png')
+plt.savefig('mypic2/' + sys.argv[2] + '_' + sys.argv[3] + '.png')

@@ -2,6 +2,7 @@ from __future__ import print_function
 import time
 import numpy as np
 import random
+import math
 from .graph import *
 
 class deepwalk(object):
@@ -16,6 +17,40 @@ class deepwalk(object):
         self.window = window
         self.app = None
         self.it = None
+
+    def sample_v(self, batch_size):
+        try:
+            nodes = self.nodes
+        except:
+            self.nodes = list(self.g.G.nodes())
+            nodes = self.nodes
+        numNodes = len(nodes)
+        table_size = self.fac * numNodes
+
+        print("Pre-procesing for non-uniform negative sampling!")
+        node_degree = np.zeros(numNodes)
+
+        look_up = self.g.look_up_dict
+        for edge in self.g.G.edges():
+            node_degree[look_up[edge[0]]
+                        ] += self.g.G[edge[0]][edge[1]]["weight"]
+        norm = sum([node_degree[i] for i in range(numNodes)])
+
+        # sampling_table = np.zeros(int(table_size), dtype=np.uint32)
+
+        p = 0
+        i = 0
+        h = []
+        for j in range(numNodes):
+            p += float(node_degree[j]) / norm
+            while i < table_size and float(i) / table_size < p:
+                h += [j]
+                i += 1
+                if i % batch_size == 0:
+                    yield h
+                    h = []
+        if len(h) > 0:
+            yield h
 
     def sample_c(self, h):
         if self.it is None:

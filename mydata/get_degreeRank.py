@@ -1,5 +1,5 @@
 
-data_name = 'email'
+data_name = 'cora_con'
 ot = open(data_name + '_degreeRank.txt', 'w')
 f = open(data_name + '_edge.txt', 'r')
 ls = f.readlines()
@@ -27,5 +27,5 @@ res = {}
 for i in range(nodenum):
     res[st[i][0]] = i
 for i in res.keys():
-    ot.writelines([i, ' ', str(res[i]), '\n'])
+    ot.writelines([i, ' ', str(res[i]), ' ', str(degrees[i]), '\n'])
 ot.close()

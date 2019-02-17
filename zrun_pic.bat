@@ -1,2 +1,2 @@
-python pic.py 50 email node2vec
+python pic.py 10 cora_con deepwalk_
 pause

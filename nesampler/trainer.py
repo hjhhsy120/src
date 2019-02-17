@@ -229,6 +229,7 @@ class trainer(object):
             f.writelines([i[0], ' ', i[1], ' ', str(i['weight']), '\n'])
         f.close()
         exit()
+        random.shuffle(samples)
         self.rep_size = rep_size
         self.best_result = 0
         self.vectors = {}
