@@ -1,5 +1,5 @@
 
-data_name = 'flickr'
+data_name = 'email_con'
 ot = open(data_name + '_info2.txt', 'w')
 f = open(data_name + '_edge.txt', 'r')
 ls = f.readlines()

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import print_function
 import random
 import math
 import numpy as np
@@ -228,8 +229,8 @@ class trainer(object):
         for i in samples:
             f.writelines([i[0], ' ', i[1], ' ', str(i['weight']), '\n'])
         f.close()
-        exit()
-        random.shuffle(samples)
+        # exit()
+        # random.shuffle(samples)
         self.rep_size = rep_size
         self.best_result = 0
         self.vectors = {}
