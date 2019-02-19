@@ -1,30 +1,30 @@
 Reading...
 Start training.
 Pre-procesing for non-uniform negative sampling!
-epoch:0 sum of loss:2315.48888721
+epoch:0 sum of loss:2314.76183355
 Pre-procesing for non-uniform negative sampling!
-epoch:1 sum of loss:2179.53342676
+epoch:1 sum of loss:2178.95870942
 Pre-procesing for non-uniform negative sampling!
-epoch:2 sum of loss:2168.71092738
+epoch:2 sum of loss:2172.03201066
 Pre-procesing for non-uniform negative sampling!
-epoch:3 sum of loss:2165.9787823
+epoch:3 sum of loss:2165.89881448
 Pre-procesing for non-uniform negative sampling!
-epoch:4 sum of loss:2164.97366469
-201.7802436351776
+epoch:4 sum of loss:2166.24736279
+199.5759105682373
 Saving embeddings...
 Node classification
-{'micro': 0.70791075050709928, 'macro': 0.43105189748938844, 'samples': 0.7079107505070994, 'weighted': 0.65735846772090933}
-{'micro': 0.71196754563894527, 'macro': 0.44530374972185671, 'samples': 0.71196754563894527, 'weighted': 0.66994847263931012}
-{'micro': 0.70993914807302239, 'macro': 0.42961085069089094, 'samples': 0.70993914807302227, 'weighted': 0.67042561834804926}
-{'micro': 0.70791075050709928, 'macro': 0.43412042342675666, 'samples': 0.7079107505070994, 'weighted': 0.66028809270189248}
-{'micro': 0.74036511156186613, 'macro': 0.45333754008315885, 'samples': 0.74036511156186613, 'weighted': 0.7036686462646734}
-clf_ratio = 0.5, micro: 0.7156186612576064
-clf_ratio = 0.5, macro: 0.4386848922824103
-clf_ratio = 0.5, samples: 0.7156186612576064
-clf_ratio = 0.5, weighted: 0.6723378595349669
+{'micro': 0.71602434077079113, 'macro': 0.4557617928291377, 'samples': 0.71602434077079102, 'weighted': 0.67683167429797386}
+{'micro': 0.68965517241379315, 'macro': 0.42585446797634646, 'samples': 0.68965517241379315, 'weighted': 0.63080960597057334}
+{'micro': 0.75253549695740363, 'macro': 0.4704177950237623, 'samples': 0.75253549695740363, 'weighted': 0.71353979639875476}
+{'micro': 0.75456389452332673, 'macro': 0.45858726254850862, 'samples': 0.75456389452332662, 'weighted': 0.70725683557989882}
+{'micro': 0.68965517241379315, 'macro': 0.40811884002143256, 'samples': 0.68965517241379315, 'weighted': 0.64126173405032172}
+clf_ratio = 0.5, micro: 0.7204868154158215
+clf_ratio = 0.5, macro: 0.4437480316798375
+clf_ratio = 0.5, samples: 0.7204868154158215
+clf_ratio = 0.5, weighted: 0.6739399292595045
 0.5	
 micro
-0.7156186612576064	
+0.7204868154158215	
 macro
-0.4386848922824103	
+0.4437480316798375	
 
