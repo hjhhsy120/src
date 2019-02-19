@@ -10,7 +10,6 @@ python -u -m vcsample > result/deepwalk_email.txt ^
 --classification ^
 --clf-ratio 0.5 ^
 --epochs 5 ^
---epoch-fac 1500 ^
---degree-bound 78
+--epoch-fac 1000
 pause
 
