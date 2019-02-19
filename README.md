@@ -1,5 +1,16 @@
 # src
 
+### 更新信息
+默认学习率改为0.001（原为0.01）
+
+deepwalk的v_sample改为以度数为权重
+
+部分结果已更新在exp1_5.xlsx上
+
+最近的采样分布热力图在mypic2中，文件名带vc的是vcsample结果，dw是标准deepwalk结果
+
+embedding的余弦相似度分布再mypic3文件夹下，文件名的数字是选取的点在度数排名（从小到大）的位置，不带数字的是整体的热力图。目前有标准deepwalk在email和cora的数据
+
 ### vc-sampling
 
 #### 固定参数：
