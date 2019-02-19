@@ -9,10 +9,15 @@ from .classify import Classifier, read_node_label
 class vctrainer(object):
     def __init__(self, graph, model_v, model_c, rep_size=128, epoch = 10, batch_size=1000, learning_rate=0.001,
                 negative_ratio=5):
+        self.cur_epoch = 0
         self.g = graph
+        self.model_v = model_v
+        self.model_c = model_c
         self.node_size = graph.G.number_of_nodes()
         self.rep_size = rep_size
+        self.batch_size = batch_size
         self.learning_rate = learning_rate
+        self.negative_ratio = negative_ratio
         self.sess = tf.Session()
         cur_seed = random.getrandbits(32)
         initializer = tf.contrib.layers.xavier_initializer(
@@ -21,44 +26,8 @@ class vctrainer(object):
             self.build_model()
         self.sess.run(tf.global_variables_initializer())
         print("Start training.")
-        h_batches = []
-        t_batches = []
-        vs = model_v.sample_v(batch_size)
-        cnt = 0
-        for h in vs:
-            t = model_c.sample_c(h)
-            h_batches += [h]
-            t_batches += [t]
-            cnt += 1
-
-
-        #------------- output all pairs
-        look_back = graph.look_back_list
-        f = open('aaa.txt', 'w')
-        for i in range(cnt):
-            for j in range(len(h_batches[i])):
-                x1 = look_back[h_batches[i][j]]
-                x2 = look_back[t_batches[i][j]]
-                f.writelines([x1, ' ', x2 , ' 1\n'])
-        f.close()
-        exit()
-        #----------------------
-
-        for tim in range(epoch):
-            sum_loss = 0.0
-            for j in range(cnt):
-                sign = [1.]
-                _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict = {
-                                    self.h: h_batches[j], self.t: t_batches[j], self.sign: sign})
-                sum_loss += cur_loss
-                for i in range(negative_ratio):
-                    t = self.neg_batch(h_batches[j])
-                    sign = [-1.]
-                    _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict={
-                                    self.h: h_batches[j], self.t: t, self.sign: sign})
-                    sum_loss += cur_loss
-            print('epoch:{} sum of loss:{!s}'.format(tim+1, sum_loss))
-
+        for i in range(epoch):
+            self.train_one_epoch()
         self.get_embeddings()
 
     def get_embeddings(self):
@@ -93,6 +62,28 @@ class vctrainer(object):
         #     self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1)))
         optimizer = tf.train.AdamOptimizer(self.learning_rate)
         self.train_op = optimizer.minimize(self.loss)
+
+    def train_one_epoch(self):
+        sum_loss = 0.0
+        vs = self.model_v.sample_v(self.batch_size)
+        batch_id = 0
+        for h in vs:
+            t = self.model_c.sample_c(h)
+            sign = [1.]
+            _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict = {
+                                self.h: h, self.t: t, self.sign: sign})
+            sum_loss += cur_loss
+            batch_id += 1
+            for i in range(self.negative_ratio):
+                t = self.neg_batch(h)
+                sign = [-1.]
+                _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict={
+                                self.h: h, self.t: t, self.sign: sign})
+                sum_loss += cur_loss
+                batch_id += 1
+
+        print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
+        self.cur_epoch += 1
 
     def neg_batch(self, h):
         t = []

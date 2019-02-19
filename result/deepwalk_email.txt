@@ -1,3 +1,30 @@
 Reading...
 Start training.
 Pre-procesing for non-uniform negative sampling!
+epoch:0 sum of loss:3399.76075211
+Pre-procesing for non-uniform negative sampling!
+epoch:1 sum of loss:3246.36556022
+Pre-procesing for non-uniform negative sampling!
+epoch:2 sum of loss:3238.09269303
+Pre-procesing for non-uniform negative sampling!
+epoch:3 sum of loss:3235.83163781
+Pre-procesing for non-uniform negative sampling!
+epoch:4 sum of loss:3231.54084615
+296.99915409088135
+Saving embeddings...
+Node classification
+{'micro': 0.70588235294117652, 'macro': 0.44461506789359762, 'samples': 0.70588235294117652, 'weighted': 0.66264323924799373}
+{'micro': 0.71805273833671401, 'macro': 0.4822240618463709, 'samples': 0.71805273833671401, 'weighted': 0.67185500099388695}
+{'micro': 0.70791075050709928, 'macro': 0.44192687047562323, 'samples': 0.7079107505070994, 'weighted': 0.66231342528850856}
+{'micro': 0.71399594320486803, 'macro': 0.4514117862337631, 'samples': 0.71399594320486814, 'weighted': 0.67516575460548522}
+{'micro': 0.70385395537525353, 'macro': 0.42571064088203886, 'samples': 0.70385395537525353, 'weighted': 0.65373535872098731}
+clf_ratio = 0.5, micro: 0.7099391480730224
+clf_ratio = 0.5, macro: 0.44917768546627873
+clf_ratio = 0.5, samples: 0.7099391480730224
+clf_ratio = 0.5, weighted: 0.6651425557713724
+0.5	
+micro
+0.7099391480730224	
+macro
+0.44917768546627873	
+

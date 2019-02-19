@@ -7,7 +7,7 @@ from .graph import *
 
 class deepwalk(object):
     # fac*node_size is the size of v_sampling table (for each epoch)
-    def __init__(self, graph, fac=50, window=10):
+    def __init__(self, graph, fac=50, window=10, degree_bound=0):
         self.g = graph
         if graph.directed:
             self.g_r = None
@@ -15,6 +15,7 @@ class deepwalk(object):
             self.g_r = graph
         self.fac = fac
         self.window = window
+        self.degree_bound = degree_bound
         self.app = None
         self.it = None
 
@@ -34,9 +35,16 @@ class deepwalk(object):
         for edge in self.g.G.edges():
             node_degree[look_up[edge[0]]
                         ] += self.g.G[edge[0]][edge[1]]["weight"]
+
+        degree_bound = self.degree_bound
+        if degree_bound > 0:
+            for i in range(numNodes):
+                if node_degree[i] > degree_bound:
+                    node_degree[i] = degree_bound
+
         norm = sum([node_degree[i] for i in range(numNodes)])
 
-        # sampling_table = np.zeros(int(table_size), dtype=np.uint32)
+        sampling_table = np.zeros(int(table_size), dtype=np.uint32)
 
         p = 0
         i = 0
@@ -44,13 +52,14 @@ class deepwalk(object):
         for j in range(numNodes):
             p += float(node_degree[j]) / norm
             while i < table_size and float(i) / table_size < p:
-                h += [j]
+                sampling_table[i] = j
                 i += 1
-                if i % batch_size == 0:
-                    yield h
-                    h = []
-        if len(h) > 0:
-            yield h
+        random.shuffle(sampling_table)
+        i = 0
+        while i < table_size:
+            j = min(i + batch_size, table_size)
+            yield sampling_table[i:j]
+            i = j
 
     def sample_c(self, h):
         if self.it is None:

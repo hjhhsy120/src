@@ -41,7 +41,7 @@ def parse_args():
                         help='epoch-fac * node num in graph = node num per epoch')
     parser.add_argument('--batch-size', default=1000, type=int,
                         help='batch size')
-    parser.add_argument('--lr', default=0.01, type=float,
+    parser.add_argument('--lr', default=0.001, type=float,
                         help='learning rate')
     parser.add_argument('--negative-ratio', default=5, type=int,
                         help='the negative ratio of embedding training')
@@ -59,6 +59,8 @@ def parse_args():
                         help='Maximum number of walking steps(APP)')
 
     # deepwalk
+    parser.add_argument('--degree-bound', default=0, type=int,
+                        help='Bound of degree for sample_v of deepwalk.')
     parser.add_argument('--window-size', default=10, type=int,
                         help='Window size of skipgram model.')
 
@@ -129,7 +131,7 @@ def parse_args():
 
 def getmodel(model, g, args):
     if model == 'deepwalk':
-        return deepwalk.deepwalk(graph=g, fac=args.epoch_fac, window=args.window_size)
+        return deepwalk.deepwalk(graph=g, fac=args.epoch_fac, window=args.window_size, degree_bound=args.degree_bound)
     if model == 'app':
         return app.APP(graph=g, jump_factor=args.app_jump_factor, sample=args.epoch_fac, step=args.app_step)
 
