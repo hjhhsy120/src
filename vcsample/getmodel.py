@@ -59,6 +59,8 @@ def parse_args():
                         help='Maximum number of walking steps(APP)')
 
     # deepwalk
+    parser.add_argument('--degree-power', default=1.0, type=float,
+                        help='Bound of degree for sample_v of deepwalk.')
     parser.add_argument('--degree-bound', default=0, type=int,
                         help='Bound of degree for sample_v of deepwalk.')
     parser.add_argument('--window-size', default=10, type=int,
@@ -131,7 +133,8 @@ def parse_args():
 
 def getmodel(model, g, args):
     if model == 'deepwalk':
-        return deepwalk.deepwalk(graph=g, fac=args.epoch_fac, window=args.window_size, degree_bound=args.degree_bound)
+        return deepwalk.deepwalk(graph=g, fac=args.epoch_fac, window=args.window_size,
+                                degree_bound=args.degree_bound, degree_power=args.degree_power)
     if model == 'app':
         return app.APP(graph=g, jump_factor=args.app_jump_factor, sample=args.epoch_fac, step=args.app_step)
 

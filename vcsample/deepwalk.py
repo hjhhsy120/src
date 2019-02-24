@@ -7,7 +7,7 @@ from .graph import *
 
 class deepwalk(object):
     # fac*node_size is the size of v_sampling table (for each epoch)
-    def __init__(self, graph, fac=50, window=10, degree_bound=0):
+    def __init__(self, graph, fac=50, window=10, degree_bound=0, degree_power=1.0):
         self.g = graph
         if graph.directed:
             self.g_r = None
@@ -16,6 +16,7 @@ class deepwalk(object):
         self.fac = fac
         self.window = window
         self.degree_bound = degree_bound
+        self.degree_power = degree_power
         self.app = None
         self.it = None
 
@@ -35,12 +36,14 @@ class deepwalk(object):
         for edge in self.g.G.edges():
             node_degree[look_up[edge[0]]
                         ] += self.g.G[edge[0]][edge[1]]["weight"]
-
         degree_bound = self.degree_bound
         if degree_bound > 0:
             for i in range(numNodes):
                 if node_degree[i] > degree_bound:
                     node_degree[i] = degree_bound
+
+        for i in range(numNodes):
+            node_degree[i] = math.pow(node_degree[i], self.degree_power)
 
         norm = sum([node_degree[i] for i in range(numNodes)])
 

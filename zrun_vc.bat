@@ -1,6 +1,6 @@
-python -u -m vcsample > result/deepwalk_email.txt ^
+python -u -m vcsample > result/deepwalk2_email.txt ^
 --input mydata/email_con_edge.txt ^
---output result/email_con_app_emd.txt ^
+--output result/email_con_dw2_emd.txt ^
 --label-file mydata/email_con_label.txt ^
 --graph-format edgelist ^
 --model-v deepwalk ^
