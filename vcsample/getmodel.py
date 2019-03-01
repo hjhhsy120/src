@@ -5,6 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from . import vctrainer
 from . import app
 from . import deepwalk
+from . import combine
 
 class emptymodel(object):
     def __init__(self, vectors):
@@ -65,6 +66,10 @@ def parse_args():
                         help='Bound of degree for sample_v of deepwalk.')
     parser.add_argument('--window-size', default=10, type=int,
                         help='Window size of skipgram model.')
+
+    # combination
+    parser.add_argument('--combine', default=0.5, type=float,
+                        help='Combine A and B with how much A.')
 
     # parser.add_argument('--p', default=1.0, type=float)
     # parser.add_argument('--q', default=1.0, type=float)
@@ -138,7 +143,10 @@ def getmodel(model, g, args):
     if model == 'app':
         return app.APP(graph=g, jump_factor=args.app_jump_factor, sample=args.epoch_fac, step=args.app_step)
 
-    model_list = ['app', 'deepwalk']
+    if model == 'deepwalk,app':
+        return combine.combine(g, args)
+
+    model_list = ['app', 'deepwalk', 'deepwalk,app']
     print ("The sampling method does not exist!")
     print ("Please choose from the following:")
     for m in model_list:

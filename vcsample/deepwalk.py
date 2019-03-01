@@ -83,7 +83,11 @@ class deepwalk(object):
         batch_size = len(h)
         t = []
         while i < batch_size:
-            root = look_back[h[i]]
+            try:
+                root = look_back[h[i]]
+            except:
+                print(h[i])
+                exit()
             if degrees[root] == 0:
                 t += [look_up[root]]
                 i += 1

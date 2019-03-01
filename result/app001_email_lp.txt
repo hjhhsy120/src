@@ -1,0 +1,25 @@
+Link prediction
+Reading...
+Regenerating link prediction graphs
+Finding 8032 positive edges of 16064 total edges
+16064 edges for test
+16064 edges for training
+Start training.
+epoch:0 sum of loss:4052.80436343
+epoch:1 sum of loss:2689.08269341
+epoch:2 sum of loss:2491.89558327
+epoch:3 sum of loss:2253.80508444
+epoch:4 sum of loss:2046.06108605
+time: 226.6058807373047
+hadamard -- AUC train: 0.9234 AUC test: 0.8247
+average -- AUC train: 0.8274 AUC test: 0.8279
+l1 -- AUC train: 0.9261 AUC test: 0.8219
+l2 -- AUC train: 0.9395 AUC test: 0.8408
+concat -- AUC train: 0.8505 AUC test: 0.8436
+Edge function test performance (AUC):
+[hadamard] mean: 0.8247 +/- 0
+[average] mean: 0.8279 +/- 0
+[l1] mean: 0.8219 +/- 0
+[l2] mean: 0.8408 +/- 0
+[concat] mean: 0.8436 +/- 0
+0.8247	0.8279	0.8219	0.8408	0.8436	

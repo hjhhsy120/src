@@ -1,17 +1,15 @@
-python -u -m vcsample > result/app001_email.txt ^
+python -u -m vcsample > result/combine0.8_email_lp.txt ^
 --input mydata/email_con_edge.txt ^
---output result/email_con_app001_emd.txt ^
 --label-file mydata/email_con_label.txt ^
 --graph-format edgelist ^
---model-v app ^
---model-c app ^
+--model-v deepwalk,app ^
+--model-c deepwalk,app ^
 --app-jump-factor 0.3 ^
 --window-size 10 ^
 --exp-times 5 ^
---classification ^
---clf-ratio 0.5 ^
+--link-prediction ^
 --epochs 5 ^
 --epoch-fac 1000 ^
---combine 0.5
+--combine 0.8
 pause
 

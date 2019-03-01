@@ -1,0 +1,30 @@
+Link prediction
+Reading...
+Regenerating link prediction graphs
+Finding 8032 positive edges of 16064 total edges
+16064 edges for test
+16064 edges for training
+Start training.
+Pre-procesing for non-uniform negative sampling!
+epoch:0 sum of loss:2313.44510747
+Pre-procesing for non-uniform negative sampling!
+epoch:1 sum of loss:2163.93491818
+Pre-procesing for non-uniform negative sampling!
+epoch:2 sum of loss:2151.95895982
+Pre-procesing for non-uniform negative sampling!
+epoch:3 sum of loss:2147.21978773
+Pre-procesing for non-uniform negative sampling!
+epoch:4 sum of loss:2143.36125933
+time: 227.53690552711487
+hadamard -- AUC train: 0.9119 AUC test: 0.8191
+average -- AUC train: 0.8395 AUC test: 0.8341
+l1 -- AUC train: 0.9772 AUC test: 0.9042
+l2 -- AUC train: 0.9789 AUC test: 0.9069
+concat -- AUC train: 0.8573 AUC test: 0.8437
+Edge function test performance (AUC):
+[hadamard] mean: 0.8191 +/- 0
+[average] mean: 0.8341 +/- 0
+[l1] mean: 0.9042 +/- 0
+[l2] mean: 0.9069 +/- 0
+[concat] mean: 0.8437 +/- 0
+0.8191	0.8341	0.9042	0.9069	0.8437	
