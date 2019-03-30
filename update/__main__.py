@@ -29,8 +29,8 @@ def parse_args():
                         help='epoch-fac * node num in graph = node num per epoch')
     parser.add_argument('--batch-size', default=1000, type=int,
                         help='batch size')
-    parser.add_argument('--lr', default=0.001, type=float,
-                        help='learning rate')
+    parser.add_argument('--lr', default=0.2, type=float,
+                        help='learning rate')  # TODO: learning rate
     parser.add_argument('--negative-ratio', default=5, type=int,
                         help='the negative ratio of embedding training')
 
@@ -79,6 +79,10 @@ def parse_args():
                         help='Max iterations for simrank.')
     parser.add_argument('--simrank-damp', default=0.8, type=float,
                         help='Value damp for simrank.')
+
+    ##multi-threading
+    parser.add_argument('--thread-num', default=4, type=int,
+                        help='Number of threads.')
 
     args = parser.parse_args()
 
