@@ -164,45 +164,29 @@ class vctrainer(object):
         self._session.run(tf.global_variables_initializer())
 
     def _train_thread_body(self):
-        words = 0.0
-        mymodel = copy.copy(self.vc_model)
-        for epoch in xrange(self.num_of_epochs):
-            sum_loss = 0.0
-            tot_time = 0.0
-            batch_id = 0
-            start = time.time()
-            for batch in mymodel.generate_batch(self.batch_size):
-                examples, labels = batch
-                words = words + len(examples)
-                tx = time.time()
-                _, cur_loss = self._session.run([self._train, self._loss], feed_dict={
-                self._examples: examples, self._labels: labels, self._words: words})
-                tot_time += time.time() - tx
-                sum_loss += cur_loss
-                batch_id = batch_id + 1  # tf.train.get_global_step()
-            end = time.time()
+        while True:
             self.lock1.acquire()
-            if (epoch + 1) % 5 == 0:
-                self.get_embeddings()
-                self.save_embeddings(self.emb_file+"_"+str(epoch + 1))
-            print('epoch {}: sum of loss:{:.8f}; time cost: {:.3f}/{:.3f}, per_batch_cost: {:.3f}, '
-                  'words_trained {:.0f}/{:.0f}'.
-                  format(epoch, sum_loss / batch_id, tot_time, end-start, tot_time/batch_id, words/self.batch_size, self.words_to_train/self.batch_size))
+            try:
+                batch = next(self.gen_batch)
+            except:
+                self.lock1.release()
+                break
             self.lock1.release()
-
+            examples, labels = batch
+            self.lock2.acquire()
+            self.words = self.words + len(examples)
+            self.lock2.release()
+            tx = time.time()
+            _, cur_loss = self._session.run([self._train, self._loss], feed_dict={
+            self._examples: examples, self._labels: labels, self._words: self.words})
+            self.tot_time += time.time() - tx
+            self.lock3.acquire()
+            self.sum_loss += cur_loss
+            self.batch_id = self.batch_id + 1
+            self.lock3.release()
         self.wt.release()
 
-
     def train(self):
-        self.lock1 = threading.RLock()
-        self.wt = threading.Semaphore(0)
-        for _ in xrange(self.thread_num):
-            t = threading.Thread(target=self._train_thread_body)
-            t.start()
-            t.join()
-        for _ in xrange(self.thread_num):
-            self.wt.acquire()
-    '''
         self.words = 0.0
         for epoch in xrange(self.num_of_epochs):
             self.sum_loss = 0.0
@@ -228,7 +212,7 @@ class vctrainer(object):
                   'words_trained {:.0f}/{:.0f}'.
                   format(epoch, self.sum_loss / self.batch_id, self.tot_time, end-start,
                   self.tot_time/self.batch_id, self.words/self.batch_size, self.words_to_train/self.batch_size))
-    '''
+
     # def _train_thread_body(self):
     #     initial_epoch, = self._session.run([self._epoch])
     #     while True:
