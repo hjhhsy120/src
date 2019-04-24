@@ -23,13 +23,13 @@ def parse_args():
     # embedding training parameters
     parser.add_argument('--representation-size', default=128, type=int,
                         help='Number of latent dimensions to learn for each node.')
-    parser.add_argument('--epochs', default=20, type=int,
+    parser.add_argument('--epochs', default=200, type=int,
                         help='The training epochs')
-    parser.add_argument('--epoch-fac', default=50, type=int,
+    parser.add_argument('--epoch-fac', default=400, type=int,
                         help='epoch-fac * node num in graph = node num per epoch')
     parser.add_argument('--batch-size', default=1000, type=int,
                         help='batch size')
-    parser.add_argument('--lr', default=0.2, type=float,
+    parser.add_argument('--lr', default=10, type=float,
                         help='learning rate')  # TODO: learning rate
     parser.add_argument('--negative-ratio', default=5, type=int,
                         help='the negative ratio of embedding training')
@@ -46,8 +46,6 @@ def parse_args():
 
     # APP
     parser.add_argument('--app-jump-factor', default=0.15, type=float,
-                        help='Jump factor (APP)')
-    parser.add_argument('--app-sample', default=200, type=int,
                         help='Jump factor (APP)')
     parser.add_argument('--app-step', default=10, type=int,
                         help='Maximum number of walking steps(APP)')
@@ -75,10 +73,10 @@ def parse_args():
                         help='Combine A and B with how much A.')
 
     # simrank
-    parser.add_argument('--simrank-maxiter', default=10, type=int,
-                        help='Max iterations for simrank.')
-    parser.add_argument('--simrank-damp', default=0.8, type=float,
-                        help='Value damp for simrank.')
+    parser.add_argument('--simrank-jump-factor', default=0.15, type=float,
+                        help='Jump factor (APP)')
+    parser.add_argument('--simrank-step', default=10, type=int,
+                        help='Maximum number of walking steps(APP)')
 
     ##multi-threading
     parser.add_argument('--thread-num', default=4, type=int,

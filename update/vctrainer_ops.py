@@ -2,9 +2,17 @@ from __future__ import print_function
 import tensorflow as tf
 import time
 
-import threading
+import copy
+
+from multiprocessing import Pool, Manager
 
 from six.moves import xrange
+
+
+def gen_data(myq, mymodel, num_of_epochs, batch_size):
+    for epoch in xrange(num_of_epochs):
+        for batch in mymodel.generate_batch(batch_size):
+            myq.put(batch)
 
 class vctrainer(object):
     def __init__(self,
@@ -22,12 +30,14 @@ class vctrainer(object):
         self.learning_rate = learning_rate
         self.negative_ratio = negative_ratio
         self.emb_file = emb_file
-        self.num_of_epochs = epoch
+        self.num_of_epochs = int(epoch / thread_num)
 
         ## how many threads
         self.thread_num = thread_num
 
-        self.words_to_train = self.vc_model.pair_per_epoch() * self.num_of_epochs
+        self.words_per_epoch = self.vc_model.pair_per_epoch()
+        self.words_to_train = self.words_per_epoch * self.num_of_epochs * self.thread_num
+
         # print("total words to train {}.".format(self.words_to_train))
         self._session = tf.Session()
         self.build_graph()
@@ -65,9 +75,12 @@ class vctrainer(object):
         self.embeddings = emb
 
         # Softmax weight: [node_size, emb_dim]. Transposed. TODO: this is only asymmetry model!!!
-        sm_w_t = tf.Variable(
-            tf.zeros([self.node_size, self.rep_size]),
-            name="sm_w_t")
+        if self.emb_model == "asym":
+            sm_w_t = tf.Variable(
+                tf.zeros([self.node_size, self.rep_size]),
+                name="sm_w_t")
+        else:
+            sm_w_t = emb
 
         # Softmax bias: [node_size].
         sm_b = tf.Variable(tf.zeros([self.node_size]), name="sm_b")
@@ -163,45 +176,54 @@ class vctrainer(object):
         # Properly initialize all variables.
         self._session.run(tf.global_variables_initializer())
 
-    def _train_thread_body(self):
-        words = 0.0
-        mymodel = copy.copy(self.vc_model)
-        for epoch in xrange(self.num_of_epochs):
-            sum_loss = 0.0
-            tot_time = 0.0
-            batch_id = 0
-            start = time.time()
-            for batch in mymodel.generate_batch(self.batch_size):
-                examples, labels = batch
-                words = words + len(examples)
-                tx = time.time()
-                _, cur_loss = self._session.run([self._train, self._loss], feed_dict={
-                self._examples: examples, self._labels: labels, self._words: words})
-                tot_time += time.time() - tx
-                sum_loss += cur_loss
-                batch_id = batch_id + 1  # tf.train.get_global_step()
-            end = time.time()
-            self.lock1.acquire()
-            if (epoch + 1) % 5 == 0:
-                self.get_embeddings()
-                self.save_embeddings(self.emb_file+"_"+str(epoch + 1))
-            print('epoch {}: sum of loss:{:.8f}; time cost: {:.3f}/{:.3f}, per_batch_cost: {:.3f}, '
-                  'words_trained {:.0f}/{:.0f}'.
-                  format(epoch, sum_loss / batch_id, tot_time, end-start, tot_time/batch_id, words/self.batch_size, self.words_to_train/self.batch_size))
-            self.lock1.release()
 
-        self.wt.release()
 
 
     def train(self):
-        self.lock1 = threading.RLock()
-        self.wt = threading.Semaphore(0)
+        mypool = Pool(self.thread_num)
+        manager = Manager()
+        myq = manager.Queue()
         for _ in xrange(self.thread_num):
-            t = threading.Thread(target=self._train_thread_body)
-            t.start()
-            t.join()
-        for _ in xrange(self.thread_num):
-            self.wt.acquire()
+            mypool.apply_async(gen_data, args=(myq, self.vc_model, self.num_of_epochs, self.batch_size,))
+
+        mypool.close()
+        words = 0.0
+        sum_loss = 0.0
+        tot_time = 0.0
+        batch_id = 0
+        epoch = 0
+        tot_words_this_epoch = self.words_per_epoch
+        itr_num = int(self.words_to_train / self.batch_size)
+        start = time.time()
+        for itr in xrange(itr_num):
+            batch = myq.get()
+            examples, labels = batch
+            words = words + len(examples)
+            tx = time.time()
+            _, cur_loss = self._session.run([self._train, self._loss], feed_dict={
+            self._examples: examples, self._labels: labels, self._words: words})
+            tot_time += time.time() - tx
+            sum_loss += cur_loss
+            batch_id = batch_id + 1  # tf.train.get_global_step()
+
+            if itr * self.batch_size >= tot_words_this_epoch:
+                end = time.time()
+                if (epoch + 1) % 5 == 0:
+                    pass
+                    #self.get_embeddings()
+                    #self.save_embeddings(self.emb_file+"_"+str(epoch + 1))
+                print('epoch {}: sum of loss:{:.8f}; time cost: {:.3f}/{:.3f}, per_batch_cost: {:.3f}, '
+                    'words_trained {:.0f}/{:.0f}'.
+                    format(epoch, sum_loss / batch_id, tot_time, end-start, tot_time/batch_id,
+                    words/self.batch_size, self.words_to_train/self.batch_size))
+                sum_loss = 0.0
+                tot_time = 0.0
+                batch_id = 0
+                epoch += 1
+                tot_words_this_epoch += self.words_per_epoch
+                start = time.time()
+        mypool.join()
+
     '''
         self.words = 0.0
         for epoch in xrange(self.num_of_epochs):

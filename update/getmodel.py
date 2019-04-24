@@ -12,7 +12,7 @@ def getmodel(model, g, args):
         return deepwalk.DeepWalk(graph=g, batch_size=args.batch_size, fac=args.epoch_fac, window=args.window_size,
                                  degree_bound=args.degree_bound, degree_power=args.degree_power)
     if model == 'app':
-        return app.APP(graph=g, batch_size=args.batch_size, stop_factor=args.app_jump_factor, sample=args.app_sample, step=args.app_step)
+        return app.APP(graph=g, batch_size=args.batch_size, stop_factor=args.app_jump_factor, sample=args.epoch_fac, step=args.app_step)
 
     if model == 'deepwalk,app':
         return combine.combine(g, args)
@@ -35,8 +35,7 @@ def getmodel(model, g, args):
                            learning_rate=args.lr, negative_ratio=args.negative_ratio)
 
     if model == 'simrank':
-        return simrank.SimRank(graph=g, fac=args.epoch_fac,
-                            maxIteration=args.simrank_maxiter, damp=args.simrank_damp)
+        return simrank.SimRank(graph=g, batch_size=args.batch_size, stop_factor=args.simrank_jump_factor, sample=args.epoch_fac, step=args.simrank_step)
 
     if model == 'node2vec':
         return node2vec.Node2vec(graph=g, fac=args.epoch_fac, window=args.window_size,
