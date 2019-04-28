@@ -5,7 +5,6 @@ import time
 import copy
 
 from multiprocessing import Pool, Manager
-import threading
 
 from six.moves import xrange
 
@@ -177,76 +176,52 @@ class vctrainer(object):
         # Properly initialize all variables.
         self._session.run(tf.global_variables_initializer())
 
-    def _train_thread_body(self):
-        while self.itr < self.itr_num:
-            batch = self.myq.get()
-            if (len(batch) == 0):
-                break;
-            examples, labels = batch
-            exmplen = len(examples)
-            words = self.words + exmplen
 
-            tx = time.time()
-            _, cur_loss = self._session.run([self._train, self._loss], feed_dict={
-            self._examples: examples, self._labels: labels, self._words: words})
-            self.ty = time.time() - tx
-
-            self.lock1.acquire()
-            self.words += exmplen
-            self.tot_time += self.ty
-            self.sum_loss += cur_loss
-            self.batch_id = self.batch_id + 1  # tf.train.get_global_step()
-
-            if self.itr * self.batch_size >= self.tot_words_this_epoch:
-                end = time.time()
-                if (self.epoch + 1) % 5 == 0:
-                    pass
-                    #self.get_embeddings()
-                    #self.save_embeddings(self.emb_file+"_"+str(epoch + 1))
-                print('epoch {}: sum of loss:{:.8f}; time cost: {:.3f}/{:.3f}, per_batch_cost: {:.3f}, '
-                    'words_trained {:.0f}/{:.0f}'.
-                    format(self.epoch, self.sum_loss / self.batch_id, self.tot_time, end-self.start,
-                        self.tot_time/self.batch_id, self.words/self.batch_size, self.words_to_train/self.batch_size))
-                self.sum_loss = 0.0
-                self.tot_time = 0.0
-                self.batch_id = 0
-                self.epoch += 1
-                self.tot_words_this_epoch += self.words_per_epoch
-                self.start = time.time()
-            self.itr += 1
-            if self.itr >= self.itr_num:
-                for i in xrange(self.thread_num):
-                    self.myq.put([])
-            self.lock1.release()
-        self.wt.release()
 
 
     def train(self):
         mypool = Pool(self.thread_num)
         manager = Manager()
-        self.myq = manager.Queue()
+        myq = manager.Queue()
         for _ in xrange(self.thread_num):
-            mypool.apply_async(gen_data, args=(self.myq, self.vc_model, self.num_of_epochs, self.batch_size,))
-        mypool.close()
+            mypool.apply_async(gen_data, args=(myq, self.vc_model, self.num_of_epochs, self.batch_size,))
 
-        self.words = 0.0
-        self.sum_loss = 0.0
-        self.tot_time = 0.0
-        self.batch_id = 0
-        self.epoch = 0
-        self.tot_words_this_epoch = self.words_per_epoch
-        self.itr_num = int(self.words_to_train / self.batch_size)
-        self.start = time.time()
-        self.itr = 0
-        self.lock1 = threading.RLock()
-        self.wt = threading.Semaphore(0)
-        for _ in xrange(self.thread_num):
-            t = threading.Thread(target=self._train_thread_body)
-            t.start()
-        for _ in xrange(self.thread_num):
-            t.join()
-        for _ in xrange(self.thread_num):
-            self.wt.acquire()
+        mypool.close()
+        words = 0.0
+        sum_loss = 0.0
+        tot_time = 0.0
+        batch_id = 0
+        epoch = 0
+        tot_words_this_epoch = self.words_per_epoch
+        itr_num = int(self.words_to_train / self.batch_size)
+        start = time.time()
+        for itr in xrange(itr_num):
+            batch = myq.get()
+            examples, labels = batch
+            words = words + len(examples)
+            tx = time.time()
+            _, cur_loss = self._session.run([self._train, self._loss], feed_dict={
+            self._examples: examples, self._labels: labels, self._words: words})
+            tot_time += time.time() - tx
+            sum_loss += cur_loss
+            batch_id = batch_id + 1  # tf.train.get_global_step()
+
+            if itr * self.batch_size >= tot_words_this_epoch:
+                end = time.time()
+                if (epoch + 1) % 5 == 0:
+                    pass
+                    #self.get_embeddings()
+                    #self.save_embeddings(self.emb_file+"_"+str(epoch + 1))
+                print('epoch {}: sum of loss:{:.8f}; time cost: {:.3f}/{:.3f}, per_batch_cost: {:.3f}, '
+                    'words_trained {:.0f}/{:.0f}'.
+                    format(epoch, sum_loss / batch_id, tot_time, end-start, tot_time/batch_id,
+                    words/self.batch_size, self.words_to_train/self.batch_size))
+                sum_loss = 0.0
+                tot_time = 0.0
+                batch_id = 0
+                epoch += 1
+                tot_words_this_epoch += self.words_per_epoch
+                start = time.time()
         mypool.join()
 
     '''
